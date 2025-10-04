@@ -329,24 +329,53 @@ class FlexFormBuilder {
         // For now, we'll implement basic reordering through buttons
     }
 
-    saveTemplate() {
+    async saveTemplate() {
         const templateName = prompt('Enter a name for this template:');
         if (!templateName) return;
 
         const template = {
-            name: templateName,
-            title: document.getElementById('formTitle').value,
-            description: document.getElementById('formDescription').value,
-            fields: [...this.fields],
-            created: new Date().toISOString()
+            form_type: 'template',
+            form_name: templateName,
+            form_title: document.getElementById('formTitle').value,
+            form_description: document.getElementById('formDescription').value,
+            form_fields: JSON.stringify(this.fields),
+            created_at: new Date().toISOString(),
+            is_template: true
         };
 
-        this.templates[templateName] = template;
+        // Save to localStorage (backup)
+        this.templates[templateName] = {
+            name: templateName,
+            title: template.form_title,
+            description: template.form_description,
+            fields: [...this.fields],
+            created: template.created_at
+        };
         this.saveTemplates();
-        this.loadSavedTemplates();
-        this.showMessage(`Template "${templateName}" saved successfully!`, 'success');
-    }
 
+        // Save to database
+        if (window.supabaseClient) {
+            try {
+                const { error } = await window.supabaseClient
+                    .from('form_submissions')
+                    .insert([template]);
+
+                if (error) {
+                    console.error('Database save error:', error);
+                    this.showMessage(`Template "${templateName}" saved locally only (database error)`, 'warning');
+                } else {
+                    this.showMessage(`Template "${templateName}" saved to database successfully!`, 'success');
+                }
+            } catch (dbError) {
+                console.error('Database connection error:', dbError);
+                this.showMessage(`Template "${templateName}" saved locally only (no database connection)`, 'warning');
+            }
+        } else {
+            this.showMessage(`Template "${templateName}" saved locally only (no database connection)`, 'warning');
+        }
+
+        this.loadSavedTemplates();
+    }
     loadTemplate() {
         const templateSelect = document.getElementById('templateSelect');
         const selectedTemplate = templateSelect.value;
