@@ -14,7 +14,7 @@
     <script src="secure-key-manager.js?v=1.5"></script>
     <script src="secure-config.js?v=1.5"></script>
     <script>
-        // *** GEMBA PORTAL v1.0 *** - (2025-10-03-CLEAN-START) ***
+        // *** GEMBA PORTAL v1.0 *** - (2025-10-04-MODAL-FIX) ***
         console.log('🚀 GEMBA PORTAL v1.0: Clean repository start');
         window.EMBEDDED_CONFIG = {
             SUPABASE_URL: 'https://rctzljfqsafjmbljeyrb.supabase.co',
@@ -441,7 +441,7 @@
             <h1>🚀 Gemba Portal Dashboard</h1>
             <p>Submit data using secure, dynamic forms</p>
             <div style="margin-top: 10px; background: rgba(255,255,255,0.2); padding: 8px 15px; border-radius: 20px; font-size: 0.85rem;">
-                � GEMBA PORTAL v1.0 - DATABASE CONNECTED: 2025-10-03 �
+                � GEMBA PORTAL v2.0 - DATABASE CONNECTED: 2025-10-04 �
             </div>
             <div style="margin-top: 15px;">
                 <a href="index.html" style="color: rgba(255,255,255,0.8); text-decoration: none; font-size: 0.9rem;">
@@ -1439,7 +1439,10 @@
                         ];
                     }
                     break;                case 'total':
-                    title = `All Submissions (Local: ${localSubmissions.length}, Database: ${dbSubmissions.length})`;
+                    console.log('🔍 MODAL TABLE DATA PREP:');
+                    console.log('  - localSubmissions.length:', localSubmissions.length);
+                    console.log('  - dbSubmissions.length:', dbSubmissions.length);
+                    console.log('  - dbSubmissions first 2 records:', dbSubmissions.slice(0, 2));                    title = `All Submissions (Local: ${localSubmissions.length}, Database: ${dbSubmissions.length})`;
                     
                     // Combine local and database data
                     const allSubmissions = [...localSubmissions, ...dbSubmissions.map(dbSub => {
