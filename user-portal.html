@@ -1380,7 +1380,11 @@
                         }
                         
                         const { data: gembaData, error: gembaError } = await gembaQuery;
-                        if (!gembaError && gembaData) {
+                        console.log('🔍 MODAL DEBUG: gembaQuery result:');
+                        console.log('  - Error:', gembaError);
+                        console.log('  - Data length:', gembaData ? gembaData.length : 0);
+                        console.log('  - First 3 records:', gembaData ? gembaData.slice(0, 3) : 'none');
+                        console.log('  - Table columns:', gembaData && gembaData[0] ? Object.keys(gembaData[0]) : 'none');                        if (!gembaError && gembaData) {
                             gembaRequestsData = gembaData;
                         }
                         
