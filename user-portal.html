@@ -918,12 +918,13 @@
                         try {
                             const { count: gembaCount, error: gembaError } = await supabaseClient
                                 .from('form_submissions')
-                                .select('*', { count: 'exact', head: true });
+                                .select('*', { count: 'exact', head: true })
+                                .eq('is_template', false);  // Only count actual submissions, not templates
 
                             if (!gembaError && gembaCount) {
                                 totalCount += gembaCount;
-                                console.log('Database form_submissions: gembaCount);
-                            }
+                                console.log('Database form_submissions (non-templates):', gembaCount);
+                            }                            }
                         } catch (gembaError) {
                             console.log('form_submissions table empty or not found');
                         }
@@ -952,12 +953,13 @@
                             // For now, include all gemba_requests as they are likely recent imported data
                             const { count: gembaMonthCount, error: gembaMonthError } = await supabaseClient
                                 .from('form_submissions')
-                                .select('*', { count: 'exact', head: true });
+                                .select('*', { count: 'exact', head: true })
+                                .eq('is_template', false);  // Only count actual submissions, not templates
 
                             if (!gembaMonthError && gembaMonthCount) {
                                 monthCount += gembaMonthCount;
-                                console.log('Database gemba_requests this month:', gembaMonthCount, '(all records - imported data is recent)');
-                            }
+                                console.log('Database form_submissions this month (non-templates):', gembaMonthCount);
+                            }                            }
                         } catch (gembaMonthError) {
                             console.log('form_submissions table empty or not found for monthly query');
                         }
