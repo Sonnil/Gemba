@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FLEX-FORM Portal Dashboard - Database Connected</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js?v=2.0"></script>
+    <script src="secure-key-manager.js?v=2.0"></script>
+    <script src="secure-config.js?v=2.0"></script>
+    <script>
+        // *** CACHE BYPASS v2.0 - NEW FILENAME DEPLOY *** - (2025-10-03-19:45) ***
+        console.log('🚀 DEPLOYMENT v2.0: NEW FILENAME - GitHub Pages cache bypass attempt');
+        
+        window.EMBEDDED_CONFIG = {
+            SUPABASE_URL: 'https://rctzljfqsafjmbljeyrb.supabase.co',
+            SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJjdHpsamZxc2Fmam1ibGpleXJiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1MTY5NDAsImV4cCI6MjA3NTA5Mjk0MH0.cwIecLyT7z3eQhUl0HWimrWZUDCkO6-jSdxO8xBLcuc',
+            _version: '2.0-NEW-FILENAME-BYPASS',
+            _timestamp: '2025-10-03-19:45'
+        };
+        
+        console.log('🔧 EMBEDDED CONFIG v2.0 loaded:', window.EMBEDDED_CONFIG._version);
+    </script>
+    <style>
+        /* Version Display Banner */
+        .version-banner {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: #28a745;
+            color: white;
+            text-align: center;
+            padding: 8px;
+            font-weight: bold;
+            z-index: 9999;
+            font-size: 14px;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 60px 0 0 0; /* Account for version banner */
+            background: #f8f9fa;
+            color: #2c3e50;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            margin: 10px 0 0 0;
+            color: #6c757d;
+            font-size: 1.1rem;
+        }
+
+        .nav-tabs {
+            display: flex;
+            background: white;
+            border-radius: 12px;
+            padding: 8px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .nav-tab {
+            flex: 1;
+            padding: 12px 20px;
+            text-align: center;
+            background: transparent;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            color: #6c757d;
+        }
+
+        .nav-tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .nav-tab:hover:not(.active) {
+            background: #f8f9fa;
+            color: #495057;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .kpi-card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            border-color: #667eea;
+        }
+
+        .kpi-card .icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            color: #667eea;
+        }
+
+        .kpi-card .value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .kpi-card .label {
+            color: #6c757d;
+            font-weight: 500;
+            font-size: 1.1rem;
+        }
+
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 500;
+            margin-top: 10px;
+        }
+
+        .status-connected {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-disconnected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .loading {
+            color: #ffc107;
+        }
+
+        .forms-container {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .forms-container h3 {
+            margin-top: 0;
+            color: #2c3e50;
+            font-size: 1.5rem;
+        }
+
+        .form-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .form-item:hover {
+            border-color: #667eea;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-info h4 {
+            margin: 0 0 5px 0;
+            color: #2c3e50;
+        }
+
+        .form-info p {
+            margin: 0;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .admin-link {
+            position: fixed;
+            top: 70px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 10000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 1000px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            margin-top: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        tr:hover {
+            background-color: #f8f9fa;
+        }
+    </style>
+</head>
+<body>
+    <!-- Version Banner -->
+    <div class="version-banner">
+        🚀 PORTAL DASHBOARD v2.0 - NEW FILENAME DEPLOY - 2025-10-03 19:45 🚀
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1>🚀 FLEX-FORM Portal Dashboard</h1>
+            <p>Submit data using secure, dynamic forms</p>
+        </div>
+
+        <a href="https://sonnil.github.io/FLEX-FORM/index.html" class="btn btn-primary admin-link">
+            <i class="fas fa-cog"></i> Admin Portal
+        </a>
+
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="showTab('dashboard')">
+                <i class="fas fa-chart-dashboard"></i> Dashboard
+            </button>
+            <button class="nav-tab" onclick="showTab('forms')">
+                <i class="fas fa-file-alt"></i> Forms
+            </button>
+        </div>
+
+        <div id="dashboard" class="tab-content active">
+            <h2>📊 Dashboard Overview</h2>
+            
+            <div class="dashboard-grid">
+                <div class="kpi-card" onclick="showDetailModal('forms')">
+                    <div class="icon">📝</div>
+                    <div class="value" id="formsCount">2</div>
+                    <div class="label">Available Forms</div>
+                </div>
+
+                <div class="kpi-card" onclick="showDetailModal('submissions')">
+                    <div class="icon">📊</div>
+                    <div class="value" id="submissionsCount">0</div>
+                    <div class="label">Total Submissions</div>
+                </div>
+
+                <div class="kpi-card" onclick="showDetailModal('monthly')">
+                    <div class="icon">📅</div>
+                    <div class="value" id="monthlyCount">0</div>
+                    <div class="label">This Month</div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="icon">🔗</div>
+                    <div class="label">Database Status</div>
+                    <div class="status-indicator status-disconnected" id="dbStatus">
+                        <span class="loading">●</span> Connecting to database...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="forms" class="tab-content">
+            <div class="forms-container">
+                <h3>📝 Available Forms</h3>
+                
+                <div class="form-item">
+                    <div class="form-info">
+                        <h4>Gemba Walk Form</h4>
+                        <p>Standardized form for Gemba walk observations and improvement opportunities</p>
+                    </div>
+                    <a href="demo-form.html" class="btn btn-primary">Open Form</a>
+                </div>
+
+                <div class="form-item">
+                    <div class="form-info">
+                        <h4>User Feedback Form</h4>
+                        <p>Collect user feedback and suggestions for system improvements</p>
+                    </div>
+                    <a href="user-forms.html" class="btn btn-primary">Open Form</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for detailed data -->
+    <div id="dataModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2 id="modalTitle">Details</h2>
+            <div id="modalContent">
+                <div class="table-container">
+                    <table id="dataTable">
+                        <thead id="tableHead"></thead>
+                        <tbody id="tableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // *** CACHE BYPASS DATABASE CONNECTION v2.0 ***
+        console.log('🚀 Portal Dashboard v2.0 initializing...');
+        
+        let supabase = null;
+        let isConnected = false;
+
+        // Initialize database connection immediately
+        async function initializeDatabase() {
+            console.log('🔧 DEPLOYMENT v2.0: Initializing database connection...');
+            
+            try {
+                if (window.EMBEDDED_CONFIG) {
+                    console.log('✅ Using embedded config v2.0:', window.EMBEDDED_CONFIG._version);
+                    supabase = window.supabase.createClient(
+                        window.EMBEDDED_CONFIG.SUPABASE_URL,
+                        window.EMBEDDED_CONFIG.SUPABASE_ANON_KEY
+                    );
+                } else {
+                    console.log('❌ EMBEDDED_CONFIG not found, using local storage fallback');
+                    updateStatus('● Using local storage (add database credentials to sync)', false);
+                    return;
+                }
+
+                // Test the connection immediately
+                console.log('🔄 Testing database connection...');
+                const { data, error } = await supabase
+                    .from('gemba_requests')
+                    .select('*', { count: 'exact', head: true });
+
+                if (error) {
+                    console.error('❌ Database connection failed:', error);
+                    updateStatus('● Database connection failed', false);
+                    return;
+                }
+
+                console.log('✅ Database connected successfully! Row count:', data?.length || 'Unknown');
+                isConnected = true;
+                updateStatus('● Connected to Supabase database', true);
+                
+                // Load dashboard data
+                await loadDashboardData();
+                
+            } catch (error) {
+                console.error('❌ Database initialization error:', error);
+                updateStatus('● Database initialization failed', false);
+            }
+        }
+
+        function updateStatus(message, connected) {
+            const statusEl = document.getElementById('dbStatus');
+            statusEl.innerHTML = `<span class="${connected ? '' : 'loading'}">●</span> ${message}`;
+            statusEl.className = `status-indicator ${connected ? 'status-connected' : 'status-disconnected'}`;
+        }
+
+        async function loadDashboardData() {
+            if (!isConnected || !supabase) {
+                console.log('⚠️ Database not connected, using default values');
+                return;
+            }
+
+            try {
+                console.log('📊 Loading dashboard data from database...');
+                
+                // Get total submissions
+                const { data: submissions, error: submissionError, count: totalCount } = await supabase
+                    .from('gemba_requests')
+                    .select('*', { count: 'exact', head: true });
+
+                if (submissionError) {
+                    console.error('❌ Error loading submissions:', submissionError);
+                    return;
+                }
+
+                console.log('✅ Total submissions loaded:', totalCount);
+                document.getElementById('submissionsCount').textContent = totalCount || 0;
+
+                // Get this month's submissions
+                const currentDate = new Date();
+                const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+                
+                const { data: monthlyData, error: monthlyError, count: monthlyCount } = await supabase
+                    .from('gemba_requests')
+                    .select('*', { count: 'exact', head: true })
+                    .gte('created_at', firstDayOfMonth.toISOString());
+
+                if (!monthlyError) {
+                    console.log('✅ Monthly submissions loaded:', monthlyCount);
+                    document.getElementById('monthlyCount').textContent = monthlyCount || 0;
+                }
+
+            } catch (error) {
+                console.error('❌ Error loading dashboard data:', error);
+            }
+        }
+
+        // Tab switching
+        function showTab(tabName) {
+            // Hide all tabs
+            const tabs = document.querySelectorAll('.tab-content');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            // Remove active class from all nav tabs
+            const navTabs = document.querySelectorAll('.nav-tab');
+            navTabs.forEach(tab => tab.classList.remove('active'));
+            
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+            
+            // Add active class to clicked nav tab
+            event.target.classList.add('active');
+        }
+
+        // Modal functions
+        async function showDetailModal(type) {
+            if (!isConnected || !supabase) {
+                alert('Database not connected. Please check your connection.');
+                return;
+            }
+
+            const modal = document.getElementById('dataModal');
+            const title = document.getElementById('modalTitle');
+            const tableHead = document.getElementById('tableHead');
+            const tableBody = document.getElementById('tableBody');
+            
+            modal.style.display = 'block';
+            
+            try {
+                if (type === 'submissions' || type === 'monthly') {
+                    title.textContent = type === 'monthly' ? 'This Month\'s Submissions' : 'All Submissions';
+                    
+                    let query = supabase.from('gemba_requests').select('*');
+                    
+                    if (type === 'monthly') {
+                        const currentDate = new Date();
+                        const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+                        query = query.gte('created_at', firstDayOfMonth.toISOString());
+                    }
+                    
+                    const { data, error } = await query.limit(100);
+                    
+                    if (error) {
+                        console.error('Error loading data:', error);
+                        tableBody.innerHTML = '<tr><td colspan="100%">Error loading data</td></tr>';
+                        return;
+                    }
+                    
+                    if (data && data.length > 0) {
+                        // Create table headers
+                        const headers = Object.keys(data[0]);
+                        tableHead.innerHTML = '<tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr>';
+                        
+                        // Create table rows
+                        tableBody.innerHTML = data.map(row => 
+                            '<tr>' + headers.map(h => `<td>${row[h] || ''}</td>`).join('') + '</tr>'
+                        ).join('');
+                    } else {
+                        tableHead.innerHTML = '<tr><th>No Data</th></tr>';
+                        tableBody.innerHTML = '<tr><td>No records found</td></tr>';
+                    }
+                } else if (type === 'forms') {
+                    title.textContent = 'Available Forms';
+                    tableHead.innerHTML = '<tr><th>Form Name</th><th>Description</th><th>Action</th></tr>';
+                    tableBody.innerHTML = `
+                        <tr>
+                            <td>Gemba Walk Form</td>
+                            <td>Standardized form for Gemba walk observations</td>
+                            <td><a href="demo-form.html" class="btn btn-primary">Open</a></td>
+                        </tr>
+                        <tr>
+                            <td>User Feedback Form</td>
+                            <td>Collect user feedback and suggestions</td>
+                            <td><a href="user-forms.html" class="btn btn-primary">Open</a></td>
+                        </tr>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error in modal:', error);
+                tableBody.innerHTML = '<tr><td colspan="100%">Error loading modal data</td></tr>';
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('dataModal').style.display = 'none';
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('dataModal');
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        // Initialize on page load
+        console.log('🚀 v2.0 NEW FILENAME: Starting Portal Dashboard initialization...');
+        document.addEventListener('DOMContentLoaded', initializeDatabase);
+    </script>
+</body>
+</html>

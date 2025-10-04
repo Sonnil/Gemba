@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supabase Key Validator</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .container { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .result { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        .warning { background: #fff8e1; color: #bf7900; }
+        input[type="text"], input[type="password"] { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; font-family: monospace; }
+        button { background: #007cba; color: white; padding: 12px 24px; border: none; border-radius: 5px; cursor: pointer; margin: 5px; }
+        button:hover { background: #005a8b; }
+        .code { background: #f4f4f4; padding: 15px; border-radius: 5px; font-family: monospace; white-space: pre-wrap; }
+        .step { margin: 20px 0; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background: #fafafa; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔑 Supabase Key Validator</h1>
+        <p>This tool helps you validate and test your Supabase API keys.</p>
+
+        <div class="warning result">
+            <strong>📋 Instructions:</strong><br>
+            1. Go to your Supabase Dashboard: <a href="https://supabase.com/dashboard" target="_blank">https://supabase.com/dashboard</a><br>
+            2. Select your project (rctzljfqsafjmbljeyrb)<br>
+            3. Go to Settings → API<br>
+            4. Copy your <strong>anon/public</strong> key and test it below
+        </div>
+
+        <div class="step">
+            <h3>Step 1: Test Anon Key</h3>
+            <p>Paste your anon/public key from Supabase dashboard:</p>
+            <input type="password" id="anonKey" placeholder="Paste your anon key here..." style="font-size: 12px;">
+            <button onclick="testAnonKey()">🔍 Test Anon Key</button>
+            <button onclick="toggleKeyVisibility('anonKey')">👁️ Show/Hide</button>
+        </div>
+
+        <div class="step">
+            <h3>Step 2: Decode Key Information</h3>
+            <button onclick="decodeKey()">🔍 Decode Key Info</button>
+            <div id="keyInfo"></div>
+        </div>
+
+        <div id="results"></div>
+    </div>
+
+    <script>
+        const supabaseUrl = 'https://rctzljfqsafjmbljeyrb.supabase.co';
+
+        function addResult(message, type = 'info') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `result ${type}`;
+            div.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong>: ${message}`;
+            results.appendChild(div);
+        }
+
+        function toggleKeyVisibility(inputId) {
+            const input = document.getElementById(inputId);
+            input.type = input.type === 'password' ? 'text' : 'password';
+        }
+
+        async function testAnonKey() {
+            const anonKey = document.getElementById('anonKey').value.trim();
+            
+            if (!anonKey) {
+                addResult('❌ Please enter an anon key', 'error');
+                return;
+            }
+
+            if (!anonKey.startsWith('eyJ')) {
+                addResult('❌ Invalid key format. Anon keys should start with "eyJ"', 'error');
+                return;
+            }
+
+            try {
+                addResult('🔄 Testing anon key...', 'info');
+
+                // Test basic connectivity
+                const response = await fetch(`${supabaseUrl}/rest/v1/`, {
+                    headers: {
+                        'apikey': anonKey,
+                        'Authorization': `Bearer ${anonKey}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    addResult('✅ Anon key is VALID!', 'success');
+                    addResult(`HTTP Status: ${response.status} ${response.statusText}`, 'success');
+                    
+                    // Test table access
+                    testTableAccess(anonKey);
+                } else {
+                    const errorText = await response.text();
+                    addResult(`❌ Anon key is INVALID!`, 'error');
+                    addResult(`HTTP Status: ${response.status} ${response.statusText}`, 'error');
+                    addResult(`Error: ${errorText}`, 'error');
+                }
+
+            } catch (error) {
+                addResult(`❌ Network error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testTableAccess(anonKey) {
+            try {
+                addResult('🔄 Testing table access...', 'info');
+
+                // Test form_submissions table
+                const response = await fetch(`${supabaseUrl}/rest/v1/form_submissions?select=count`, {
+                    headers: {
+                        'apikey': anonKey,
+                        'Authorization': `Bearer ${anonKey}`,
+                        'Content-Type': 'application/json',
+                        'Prefer': 'count=exact'
+                    }
+                });
+
+                if (response.ok) {
+                    const countHeader = response.headers.get('content-range');
+                    const count = countHeader ? countHeader.split('/')[1] : 'unknown';
+                    addResult(`✅ Table access successful! Found ${count} records`, 'success');
+                } else {
+                    const errorText = await response.text();
+                    addResult(`⚠️ Table access restricted: ${response.status}`, 'warning');
+                    addResult(`This might be due to Row Level Security policies`, 'warning');
+                }
+
+            } catch (error) {
+                addResult(`❌ Table test error: ${error.message}`, 'error');
+            }
+        }
+
+        function decodeKey() {
+            const anonKey = document.getElementById('anonKey').value.trim();
+            
+            if (!anonKey) {
+                addResult('❌ Please enter a key first', 'error');
+                return;
+            }
+
+            try {
+                // Decode JWT payload
+                const parts = anonKey.split('.');
+                if (parts.length !== 3) {
+                    addResult('❌ Invalid JWT format', 'error');
+                    return;
+                }
+
+                const payload = parts[1];
+                // Add padding if needed
+                const padding = 4 - (payload.length % 4);
+                const paddedPayload = padding === 4 ? payload : payload + '='.repeat(padding);
+                
+                const decoded = JSON.parse(atob(paddedPayload));
+                
+                const keyInfo = document.getElementById('keyInfo');
+                keyInfo.innerHTML = `
+                    <div class="code">Key Information:
+Project: ${decoded.ref || 'unknown'}
+Role: ${decoded.role || 'unknown'}
+Issued At: ${decoded.iat ? new Date(decoded.iat * 1000).toLocaleString() : 'unknown'}
+Expires At: ${decoded.exp ? new Date(decoded.exp * 1000).toLocaleString() : 'unknown'}
+Issuer: ${decoded.iss || 'unknown'}
+
+${decoded.exp && decoded.exp * 1000 < Date.now() ? '⚠️ KEY HAS EXPIRED!' : '✅ Key is not expired'}
+                    </div>
+                `;
+
+                addResult('✅ Key decoded successfully', 'success');
+
+            } catch (error) {
+                addResult(`❌ Failed to decode key: ${error.message}`, 'error');
+            }
+        }
+
+        // Show current key on load
+        window.addEventListener('DOMContentLoaded', () => {
+            addResult('Key validator loaded. Please test your anon key from Supabase dashboard.', 'info');
+        });
+    </script>
+</body>
+</html>

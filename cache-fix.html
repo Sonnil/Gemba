@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FLEX-FORM - Cache Fix Redirect</title>
+    <meta http-equiv="refresh" content="3;url=https://sonnil.github.io/FLEX-FORM/portal-dashboard.html">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            text-align: center;
+        }
+        .container {
+            max-width: 600px;
+            padding: 40px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255,255,255,0.3);
+            border-top: 5px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .manual-links {
+            margin-top: 30px;
+        }
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            margin: 10px;
+            transition: all 0.3s ease;
+        }
+        .btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 FLEX-FORM Portal</h1>
+        <h2>Cache Fix - Redirecting to Working Version</h2>
+        <p>GitHub Pages cache issue detected. Redirecting to working database version...</p>
+        
+        <div class="spinner"></div>
+        
+        <p><strong>Redirecting in 3 seconds to:</strong><br>
+        <code>portal-dashboard.html</code> (v2.0)</p>
+        
+        <div class="manual-links">
+            <h3>Manual Access Links:</h3>
+            <a href="https://sonnil.github.io/FLEX-FORM/portal-dashboard.html" class="btn">
+                📊 Portal Dashboard v2.0
+            </a>
+            <a href="https://sonnil.github.io/FLEX-FORM/user-portal.html?v=2.0&cache=bypass" class="btn">
+                🔄 Try Original (Cache Bust)
+            </a>
+        </div>
+        
+        <p style="font-size: 14px; opacity: 0.8; margin-top: 30px;">
+            This redirect page exists because GitHub Pages aggressively caches files.<br>
+            The portal-dashboard.html file has the working database connection.
+        </p>
+    </div>
+</body>
+</html>

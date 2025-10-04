@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Navigation Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .nav-tab {
+            display: inline-block;
+            padding: 10px 20px;
+            margin: 5px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .nav-tab.active {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        .section {
+            display: none;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+        .section.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <h1>Navigation Test</h1>
+    
+    <!-- Navigation -->
+    <nav class="navigation">
+        <a href="#" id="dashboardTab" class="nav-tab active">
+            Dashboard
+        </a>
+        <a href="#" id="formsTab" class="nav-tab">
+            Forms
+        </a>
+        <a href="index.html" class="nav-tab admin-link">
+            Admin Panel
+        </a>
+    </nav>
+    
+    <!-- Dashboard Section -->
+    <div id="dashboardSection" class="section active">
+        <h2>Dashboard Section</h2>
+        <p>This is the dashboard content.</p>
+    </div>
+
+    <!-- Forms Section -->
+    <div id="formsSection" class="section">
+        <h2>Forms Section</h2>
+        <p>This is the forms content.</p>
+        <div>Available templates would appear here.</div>
+    </div>
+    
+    <div id="status" style="background: rgba(255,255,255,0.9); padding: 10px; margin: 10px 0; border-radius: 5px;">
+        <strong>Click status:</strong> <span id="clickInfo">No clicks yet</span>
+    </div>
+    
+    <script>
+        console.log('Navigation test script loaded');
+        
+        // Add click handlers
+        document.querySelectorAll('.nav-tab:not(.admin-link)').forEach(tab => {
+            tab.addEventListener('click', (e) => {
+                e.preventDefault();
+                const tabId = e.target.closest('.nav-tab').id;
+                console.log('Tab clicked:', tabId);
+                
+                document.getElementById('clickInfo').textContent = `Clicked: ${tabId}`;
+                
+                // Remove active class from all tabs and sections
+                document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+
+                // Add active class to clicked tab
+                document.getElementById(tabId).classList.add('active');
+
+                // Show corresponding section
+                const sectionMap = {
+                    'dashboardTab': 'dashboardSection',
+                    'formsTab': 'formsSection'
+                };
+
+                const sectionId = sectionMap[tabId];
+                if (sectionId) {
+                    document.getElementById(sectionId).classList.add('active');
+                    console.log('Showing section:', sectionId);
+                } else {
+                    console.log('No section found for:', tabId);
+                }
+            });
+        });
+        
+        console.log('Event listeners attached');
+    </script>
+</body>
+</html>

@@ -1,0 +1,140 @@
+{
+  "dataverse": {
+    "apiVersion": "v9.2",
+    "timeout": 30000,
+    "retryAttempts": 3,
+    "defaultSettings": {
+      "url": "",
+      "entityName": "",
+      "connectionString": ""
+    }
+  },
+  "formDefaults": {
+    "title": "Dynamic Form",
+    "description": "",
+    "submitButtonText": "Submit Form",
+    "successMessage": "Form submitted successfully!",
+    "errorMessage": "An error occurred while submitting the form. Please try again."
+  },
+  "fieldTypes": {
+    "text": {
+      "label": "Text Input",
+      "icon": "fas fa-font",
+      "dataType": "SingleLine.Text",
+      "maxLength": 255
+    },
+    "email": {
+      "label": "Email",
+      "icon": "fas fa-envelope",
+      "dataType": "SingleLine.Email",
+      "validation": "email"
+    },
+    "number": {
+      "label": "Number",
+      "icon": "fas fa-hashtag",
+      "dataType": "Whole.None",
+      "validation": "numeric"
+    },
+    "date": {
+      "label": "Date",
+      "icon": "fas fa-calendar",
+      "dataType": "DateTime.DateOnly"
+    },
+    "select": {
+      "label": "Dropdown",
+      "icon": "fas fa-list",
+      "dataType": "Picklist"
+    },
+    "radio": {
+      "label": "Radio",
+      "icon": "fas fa-dot-circle",
+      "dataType": "Picklist"
+    },
+    "checkbox": {
+      "label": "Checkbox",
+      "icon": "fas fa-check-square",
+      "dataType": "TwoOptions"
+    },
+    "textarea": {
+      "label": "Textarea",
+      "icon": "fas fa-align-left",
+      "dataType": "Multiple",
+      "maxLength": 2000
+    },
+    "file": {
+      "label": "File Upload",
+      "icon": "fas fa-file-upload",
+      "dataType": "File",
+      "allowedExtensions": [".pdf", ".doc", ".docx", ".txt", ".jpg", ".png", ".gif"]
+    }
+  },
+  "templates": {
+    "contact": {
+      "name": "Contact Form",
+      "description": "Basic contact information form",
+      "category": "Business"
+    },
+    "survey": {
+      "name": "Survey Form", 
+      "description": "Customer feedback and survey form",
+      "category": "Feedback"
+    },
+    "registration": {
+      "name": "Registration Form",
+      "description": "Event or service registration form",
+      "category": "Events"
+    },
+    "feedback": {
+      "name": "Feedback Form",
+      "description": "General feedback collection form",
+      "category": "Feedback"
+    }
+  },
+  "validation": {
+    "required": {
+      "message": "This field is required"
+    },
+    "email": {
+      "pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$",
+      "message": "Please enter a valid email address"
+    },
+    "phone": {
+      "pattern": "^[\\+]?[1-9][\\d]{0,15}$",
+      "message": "Please enter a valid phone number"
+    },
+    "url": {
+      "pattern": "^https?:\\/\\/.+",
+      "message": "Please enter a valid URL"
+    },
+    "minLength": {
+      "message": "Must be at least {min} characters long"
+    },
+    "maxLength": {
+      "message": "Must be no more than {max} characters long"
+    }
+  },
+  "ui": {
+    "themes": {
+      "default": {
+        "primaryColor": "#667eea",
+        "secondaryColor": "#764ba2",
+        "successColor": "#48bb78",
+        "errorColor": "#f56565",
+        "warningColor": "#ed8936",
+        "infoColor": "#4299e1"
+      }
+    },
+    "animations": {
+      "enabled": true,
+      "duration": 300,
+      "easing": "ease-in-out"
+    },
+    "responsive": {
+      "breakpoints": {
+        "mobile": 480,
+        "tablet": 768,
+        "desktop": 1024
+      }
+    }
+  }
+}

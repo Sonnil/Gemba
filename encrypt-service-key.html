@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Service Key Encryption Utility</title>
+    <script src="secure-key-manager.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .step {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+        .step h3 {
+            color: #333;
+            margin-top: 0;
+        }
+        input[type="password"], input[type="text"], textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-family: monospace;
+            margin: 10px 0;
+        }
+        textarea {
+            height: 100px;
+            resize: vertical;
+        }
+        button {
+            background: #007cba;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #005a8b;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .result {
+            background: #e8f5e8;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #4caf50;
+            margin: 10px 0;
+        }
+        .error {
+            background: #ffeaea;
+            border-left-color: #f44336;
+        }
+        .warning {
+            background: #fff8e1;
+            border-left-color: #ff9800;
+            color: #bf7900;
+        }
+        .code {
+            background: #f4f4f4;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Service Key Encryption Utility</h1>
+        <p>This utility helps you encrypt your Supabase service key for secure storage.</p>
+        
+        <div class="warning result">
+            <strong>⚠️ Security Notice:</strong> This tool runs entirely in your browser. Your keys never leave your computer.
+            However, make sure you're running this on a secure, private computer.
+        </div>
+
+        <div class="step">
+            <h3>Step 1: Enter Your Service Key</h3>
+            <p>Paste your Supabase service key (starts with "eyJhbGciOiJIUzI1NiI..."):</p>
+            <textarea id="serviceKey" placeholder="Paste your service key here..."></textarea>
+        </div>
+
+        <div class="step">
+            <h3>Step 2: Create Master Password</h3>
+            <p>Choose a strong master password (you'll need this to decrypt the key later):</p>
+            <input type="password" id="masterPassword" placeholder="Enter master password">
+            <input type="password" id="confirmPassword" placeholder="Confirm master password">
+        </div>
+
+        <div class="step">
+            <h3>Step 3: Encrypt</h3>
+            <button onclick="encryptServiceKey()">🔐 Encrypt Service Key</button>
+            <button onclick="testDecryption()" id="testBtn" disabled>🔍 Test Decryption</button>
+        </div>
+
+        <div id="results"></div>
+
+        <div class="step" id="instructionsStep" style="display: none;">
+            <h3>Step 4: Update Configuration</h3>
+            <p>Copy this encrypted configuration and update your <code>secure-config.js</code> file:</p>
+            <div class="code" id="configCode"></div>
+            <button onclick="copyToClipboard()">📋 Copy Configuration</button>
+        </div>
+    </div>
+
+    <script>
+        let keyManager = new SecureKeyManager();
+        let encryptedResult = null;
+
+        function addResult(message, type = 'result') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `result ${type}`;
+            div.innerHTML = message;
+            results.appendChild(div);
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+
+        async function encryptServiceKey() {
+            try {
+                clearResults();
+
+                const serviceKey = document.getElementById('serviceKey').value.trim();
+                const masterPassword = document.getElementById('masterPassword').value;
+                const confirmPassword = document.getElementById('confirmPassword').value;
+
+                // Validation
+                if (!serviceKey) {
+                    addResult('❌ Please enter your service key', 'error');
+                    return;
+                }
+
+                if (!serviceKey.startsWith('eyJ')) {
+                    addResult('❌ Service key should start with "eyJ" (JWT format)', 'error');
+                    return;
+                }
+
+                if (!masterPassword) {
+                    addResult('❌ Please enter a master password', 'error');
+                    return;
+                }
+
+                if (masterPassword !== confirmPassword) {
+                    addResult('❌ Passwords do not match', 'error');
+                    return;
+                }
+
+                if (masterPassword.length < 8) {
+                    addResult('❌ Master password should be at least 8 characters', 'error');
+                    return;
+                }
+
+                addResult('🔄 Encrypting service key...', 'result');
+
+                // Encrypt the key
+                encryptedResult = await keyManager.generateEncryptedConfig(serviceKey, masterPassword);
+
+                addResult('✅ Service key encrypted successfully!', 'result');
+                
+                // Show configuration
+                const configCode = `SERVICE_KEY_CONFIG: {
+    encrypted: true,
+    serviceKey: '${encryptedResult.serviceKey}',
+    algorithm: 'AES-GCM',
+    keyDerivation: 'PBKDF2',
+    hint: 'Enter master password to decrypt service key'
+}`;
+
+                document.getElementById('configCode').textContent = configCode;
+                document.getElementById('instructionsStep').style.display = 'block';
+                document.getElementById('testBtn').disabled = false;
+
+                addResult('📋 Configuration generated! Scroll down to copy it.', 'result');
+
+            } catch (error) {
+                addResult(`❌ Encryption failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function testDecryption() {
+            try {
+                if (!encryptedResult) {
+                    addResult('❌ No encrypted key to test', 'error');
+                    return;
+                }
+
+                const masterPassword = document.getElementById('masterPassword').value;
+                addResult('🔄 Testing decryption...', 'result');
+
+                const decrypted = await keyManager.loadEncryptedServiceKey(encryptedResult, masterPassword);
+                const original = document.getElementById('serviceKey').value.trim();
+
+                if (decrypted === original) {
+                    addResult('✅ Decryption test successful! Key matches original.', 'result');
+                } else {
+                    addResult('❌ Decryption test failed! Decrypted key does not match original.', 'error');
+                }
+
+            } catch (error) {
+                addResult(`❌ Decryption test failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function copyToClipboard() {
+            try {
+                const configText = document.getElementById('configCode').textContent;
+                await navigator.clipboard.writeText(configText);
+                addResult('✅ Configuration copied to clipboard!', 'result');
+            } catch (error) {
+                addResult('❌ Failed to copy to clipboard. Please copy manually.', 'error');
+            }
+        }
+
+        // Clear sensitive data on page unload
+        window.addEventListener('beforeunload', () => {
+            document.getElementById('serviceKey').value = '';
+            document.getElementById('masterPassword').value = '';
+            document.getElementById('confirmPassword').value = '';
+        });
+    </script>
+</body>
+</html>

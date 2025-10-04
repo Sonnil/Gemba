@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick Database Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // Embedded configuration
+        window.EMBEDDED_CONFIG = {
+            SUPABASE_URL: 'https://rctzljfqsafjmbljeyrb.supabase.co',
+            SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJjdHpsamZxc2Fmam1ibGpleXJiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1MTY5NDAsImV4cCI6MjA3NTA5Mjk0MH0.cwIecLyT7z3eQhUl0HWimrWZUDCkO6-jSdxO8xBLcuc'
+        };
+    </script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Quick Database Test</h1>
+        <p>This page tests if the database connection is working on GitHub Pages.</p>
+        
+        <div>
+            <button onclick="testConnection()">Test Connection</button>
+            <button onclick="testDataCount()">Test Data Count</button>
+        </div>
+        
+        <div id="results"></div>
+    </div>
+
+    <script>
+        let supabase = null;
+        
+        function log(message, type = 'info') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `status ${type}`;
+            div.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
+            results.appendChild(div);
+            console.log(message);
+        }
+        
+        async function testConnection() {
+            try {
+                log('🔧 Testing connection...', 'info');
+                
+                if (!window.EMBEDDED_CONFIG) {
+                    throw new Error('EMBEDDED_CONFIG not found');
+                }
+                
+                if (!window.supabase) {
+                    throw new Error('Supabase library not loaded');
+                }
+                
+                const { SUPABASE_URL, SUPABASE_ANON_KEY } = window.EMBEDDED_CONFIG;
+                log(`📍 URL: ${SUPABASE_URL}`, 'info');
+                log(`🔑 Key length: ${SUPABASE_ANON_KEY?.length || 0}`, 'info');
+                
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                log('✅ Supabase client created successfully!', 'success');
+                
+                // Test with a simple ping
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/`, {
+                    headers: {
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                    }
+                });
+                
+                if (response.ok) {
+                    log('✅ Database connection successful!', 'success');
+                } else {
+                    log(`❌ Database connection failed: ${response.status} ${response.statusText}`, 'error');
+                }
+                
+            } catch (error) {
+                log(`❌ Connection test failed: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testDataCount() {
+            try {
+                log('📊 Testing data count...', 'info');
+                
+                if (!supabase) {
+                    log('⚠️ No connection - running connection test first...', 'info');
+                    await testConnection();
+                    if (!supabase) return;
+                }
+                
+                // Test gemba_requests table
+                log('🔍 Checking gemba_requests table...', 'info');
+                const { count: gembaCount, error: gembaError } = await supabase
+                    .from('gemba_requests')
+                    .select('*', { count: 'exact', head: true });
+                
+                if (gembaError) {
+                    log(`⚠️ gemba_requests error: ${gembaError.message}`, 'error');
+                } else {
+                    log(`✅ gemba_requests count: ${gembaCount}`, 'success');
+                }
+                
+                // Test form_submissions table
+                log('🔍 Checking form_submissions table...', 'info');
+                const { count: formCount, error: formError } = await supabase
+                    .from('form_submissions')
+                    .select('*', { count: 'exact', head: true });
+                
+                if (formError) {
+                    log(`⚠️ form_submissions error: ${formError.message}`, 'error');
+                } else {
+                    log(`✅ form_submissions count: ${formCount}`, 'success');
+                }
+                
+                const total = (gembaCount || 0) + (formCount || 0);
+                log(`📈 Total records: ${total}`, total > 0 ? 'success' : 'error');
+                
+            } catch (error) {
+                log(`❌ Data count test failed: ${error.message}`, 'error');
+            }
+        }
+        
+        // Auto-run tests on load
+        document.addEventListener('DOMContentLoaded', async () => {
+            log('🚀 Page loaded - running auto tests...', 'info');
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            await testConnection();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await testDataCount();
+        });
+    </script>
+</body>
+</html>

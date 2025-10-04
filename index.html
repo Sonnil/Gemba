@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FLEX-FORM - Dynamic Form Builder</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="modern-utilities.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1><i class="fas fa-forms"></i> FLEX-FORM</h1>
+            <p>🔐 Secure Dynamic Form Builder with Enterprise Database</p>
+            
+            <!-- Admin Navigation -->
+            <nav class="admin-navigation">
+                <a href="#" class="nav-link active">
+                    <i class="fas fa-cog"></i> Admin Panel
+                </a>
+                <a href="user-portal.html" class="nav-link user-portal">
+                    <i class="fas fa-user"></i> User Portal
+                </a>
+            </nav>
+        </header>
+
+        <div class="main-content animate-fade-in">
+            <!-- Control Panel -->
+            <div class="control-panel card-modern">
+                <h2><i class="fas fa-tools"></i> Form Controls</h2>
+                
+                <!-- Field Types -->
+                <div class="field-types">
+                    <h3>Add Fields</h3>
+                    <div class="field-buttons">
+                        <button class="field-btn" data-type="text">
+                            <i class="fas fa-font"></i> Text Input
+                        </button>
+                        <button class="field-btn" data-type="email">
+                            <i class="fas fa-envelope"></i> Email
+                        </button>
+                        <button class="field-btn" data-type="number">
+                            <i class="fas fa-hashtag"></i> Number
+                        </button>
+                        <button class="field-btn" data-type="date">
+                            <i class="fas fa-calendar"></i> Date
+                        </button>
+                        <button class="field-btn" data-type="select">
+                            <i class="fas fa-list"></i> Dropdown
+                        </button>
+                        <button class="field-btn" data-type="radio">
+                            <i class="fas fa-dot-circle"></i> Radio
+                        </button>
+                        <button class="field-btn" data-type="checkbox">
+                            <i class="fas fa-check-square"></i> Checkbox
+                        </button>
+                        <button class="field-btn" data-type="textarea">
+                            <i class="fas fa-align-left"></i> Textarea
+                        </button>
+                        <button class="field-btn" data-type="file">
+                            <i class="fas fa-file-upload"></i> File Upload
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Template Controls -->
+                <div class="template-controls">
+                    <h3>Template Management</h3>
+                    <div class="template-actions">
+                        <button id="saveTemplate" class="btn-modern btn-success">
+                            <i class="fas fa-save"></i> Save Template
+                        </button>
+                        <button id="loadTemplate" class="btn-modern btn-primary">
+                            <i class="fas fa-folder-open"></i> Load Template
+                        </button>
+                        <button id="clearForm" class="btn-modern btn-danger">
+                            <i class="fas fa-trash"></i> Clear Form
+                        </button>
+                    </div>
+                    
+                    <div class="saved-templates">
+                        <select id="templateSelect">
+                            <option value="">Select a template...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Secure Database Connection -->
+                <div class="database-connection">
+                    <h3>🔐 Secure Database Settings</h3>
+                    <div class="connection-form">
+                        <input type="url" id="databaseUrl" placeholder="Supabase URL (https://xxx.supabase.co)" />
+                        <input type="password" id="databaseKey" placeholder="API Key" />
+                        <input type="text" id="tableName" placeholder="Table Name" />
+                        <input type="email" id="userEmail" placeholder="Your Email (for audit)" />
+                        <input type="text" id="userDepartment" placeholder="Department" />
+                        <button id="connectDatabase" class="btn-modern btn-primary">
+                            <i class="fas fa-database"></i> Connect to Database
+                        </button>
+                        <div id="connectionStatus" class="status">
+                            <span class="status-dot status-offline" id="statusDot"></span>
+                            <span id="statusText">Disconnected</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Builder Area -->
+            <div class="form-builder">
+                <div class="form-header">
+                    <h2><i class="fas fa-edit"></i> Form Builder</h2>
+                    <div class="form-actions">
+                        <button id="previewForm" class="action-btn preview">
+                            <i class="fas fa-eye"></i> Preview
+                        </button>
+                        <button id="exportForm" class="action-btn export">
+                            <i class="fas fa-download"></i> Export
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-title-section">
+                    <input type="text" id="formTitle" placeholder="Enter form title..." value="Dynamic Form">
+                    <textarea id="formDescription" placeholder="Enter form description..."></textarea>
+                </div>
+
+                <div id="formCanvas" class="form-canvas">
+                    <div class="empty-state">
+                        <i class="fas fa-plus-circle"></i>
+                        <p>Click on field types to start building your form</p>
+                    </div>
+                </div>
+
+                <div class="form-footer">
+                    <button id="submitToDatabase" class="submit-btn">
+                        <i class="fas fa-shield-alt"></i> Submit to Secure Database
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Field Configuration Modal -->
+        <div id="fieldConfigModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Configure Field</h3>
+                    <span class="close">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <div class="config-group">
+                        <label>Field Label:</label>
+                        <input type="text" id="fieldLabel" placeholder="Enter field label">
+                    </div>
+                    <div class="config-group">
+                        <label>Field Name:</label>
+                        <input type="text" id="fieldName" placeholder="Enter field name">
+                    </div>
+                    <div class="config-group">
+                        <label>Placeholder:</label>
+                        <input type="text" id="fieldPlaceholder" placeholder="Enter placeholder text">
+                    </div>
+                    <div class="config-group">
+                        <label>
+                            <input type="checkbox" id="fieldRequired"> Required Field
+                        </label>
+                    </div>
+                    <div id="optionsConfig" class="config-group" style="display: none;">
+                        <label>Options (one per line):</label>
+                        <textarea id="fieldOptions" placeholder="Option 1&#10;Option 2&#10;Option 3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="saveFieldConfig" class="btn-modern btn-success">Save Field</button>
+                    <button id="cancelFieldConfig" class="btn-modern btn-secondary">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Preview Modal -->
+        <div id="previewModal" class="modal">
+            <div class="modal-content large">
+                <div class="modal-header">
+                    <h3>Form Preview</h3>
+                    <span class="close">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <div id="previewContainer"></div>
+                </div>
+                <div class="modal-footer">
+                    <button id="closePreview" class="btn-modern btn-secondary">Close Preview</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
+    <script src="secure-key-manager.js"></script>
+    <script src="secure-config.js"></script>
+    <script>
+        // Embedded database configuration for GitHub Pages
+        window.EMBEDDED_CONFIG = {
+            SUPABASE_URL: 'https://rctzljfqsafjmbljeyrb.supabase.co',
+            SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJjdHpsamZxc2Fmam1ibGpleXJiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1MTY5NDAsImV4cCI6MjA3NTA5Mjk0MH0.cwIecLyT7z3eQhUl0HWimrWZUDCkO6-jSdxO8xBLcuc'
+        };
+    </script>
+    <script src="secure-supabase-connector.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

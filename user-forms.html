@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FLEX-FORM - User Portal</title>
+    <link rel="stylesheet" href="user-styles.css">
+    <link rel="stylesheet" href="modern-utilities.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Export Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1><i class="fas fa-clipboard-list"></i> FLEX-FORM</h1>
+            <p>🔐 Secure Form Submission Portal</p>
+            
+            <!-- Navigation -->
+            <nav class="navigation">
+                <a href="#" id="dashboardTab" class="nav-tab active">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                </a>
+                <a href="#" id="formsTab" class="nav-tab">
+                    <i class="fas fa-edit"></i> Forms
+                </a>
+                <a href="index.html" class="nav-tab admin-link">
+                    <i class="fas fa-cog"></i> Admin Panel
+                </a>
+            </nav>
+        </header>
+
+        <div class="main-content animate-fade-in">
+            
+            <!-- Dashboard Section -->
+            <div id="dashboardSection" class="section active animate-slide-up">
+                <div class="dashboard-header">
+                    <h2><i class="fas fa-chart-dashboard"></i> Data Dashboard</h2>
+                    <div class="dashboard-stats">
+                        <div class="stat-card">
+                            <div class="stat-number" id="totalRecords">0</div>
+                            <div class="stat-label">Total Records</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="myRecords">0</div>
+                            <div class="stat-label">My Submissions</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="recentRecords">0</div>
+                            <div class="stat-label">This Month</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Database Connection Panel -->
+                <div class="connection-panel">
+                    <h3><i class="fas fa-database"></i> Database Connection</h3>
+                    <div class="connection-form">
+                        <div class="form-row">
+                            <input type="url" id="userDatabaseUrl" placeholder="Supabase URL" />
+                            <input type="password" id="userDatabaseKey" placeholder="API Key" />
+                        </div>
+                        <div class="form-row">
+                            <input type="email" id="currentUserEmail" placeholder="Your Email" />
+                            <input type="text" id="currentUserDepartment" placeholder="Department" />
+                        </div>
+                        <button id="connectUserDatabase" class="btn-modern btn-primary">
+                            <i class="fas fa-plug"></i> Connect to Database
+                        </button>
+                        <div id="userConnectionStatus" class="status">
+                            <span class="status-dot status-offline" id="statusDot"></span>
+                            <span id="statusText">Disconnected</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Submissions -->
+                <div class="recent-submissions">
+                    <h3><i class="fas fa-clock"></i> Recent Submissions</h3>
+                    <div id="recentSubmissionsList" class="submissions-list">
+                        <div class="empty-state">
+                            <i class="fas fa-inbox"></i>
+                            <p>No submissions yet. Connect to database to view your data.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Export Functionality in Dashboard -->
+                <div class="export-section">
+                    <h3><i class="fas fa-download"></i> Export Your Data</h3>
+                    <p>Export your submitted data to various formats</p>
+                    <div class="export-buttons">
+                        <button id="exportToPDF" class="btn-modern btn-secondary">
+                            <i class="fas fa-file-pdf"></i> Export to PDF
+                        </button>
+                        <button id="exportToExcel" class="btn-modern btn-success">
+                            <i class="fas fa-file-excel"></i> Export to Excel
+                        </button>
+                        <button id="exportToCSV" class="btn-modern btn-primary">
+                            <i class="fas fa-file-csv"></i> Export to CSV
+                        </button>
+                    </div>
+                    <div id="exportStatus" class="export-status"></div>
+                </div>
+            </div>
+
+            <!-- Forms Section -->
+            <div id="formsSection" class="section">
+                <!-- Form Selection Step -->
+                <div id="formSelectionStep" class="form-step active">
+                    <div class="step-header">
+                        <h2><i class="fas fa-clipboard-list"></i> Select a Form</h2>
+                        <p>Choose from available form templates created by administrators</p>
+                    </div>
+                    
+                    <!-- Database Connection Panel (if needed for forms) -->
+                    <div class="connection-panel" id="formsConnectionPanel" style="display: none;">
+                        <h3><i class="fas fa-database"></i> Database Connection Required</h3>
+                        <div class="connection-form">
+                            <div class="form-row">
+                                <input type="url" id="formsDbUrl" placeholder="Supabase URL" />
+                                <input type="password" id="formsDbKey" placeholder="API Key" />
+                            </div>
+                            <div class="form-row">
+                                <input type="email" id="formsUserEmail" placeholder="Your Email" />
+                                <input type="text" id="formsUserDept" placeholder="Department" />
+                            </div>
+                            <button id="connectFormsDatabase" class="btn-modern btn-primary">
+                                <i class="fas fa-plug"></i> Connect to Database
+                            </button>
+                            <div id="formsConnectionStatus" class="status"></div>
+                        </div>
+                    </div>
+
+                    <!-- Available Templates Grid -->
+                    <div class="templates-grid" id="templatesGrid">
+                        <div class="templates-loading">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <p>Loading available forms...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form Filling Step -->
+                <div id="formFillingStep" class="form-step">
+                    <div class="step-header">
+                        <button id="backToSelection" class="btn-modern btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Back to Form Selection
+                        </button>
+                        <h2 id="currentFormTitle"><i class="fas fa-edit"></i> Fill Form</h2>
+                    </div>
+
+                    <!-- Dynamic Form Container -->
+                    <div id="userFormContainer" class="form-container">
+                        <div class="form-placeholder">
+                            <i class="fas fa-file-alt"></i>
+                            <h3>Loading Form...</h3>
+                            <p>Please wait while we prepare your form.</p>
+                        </div>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="form-actions" id="formActions" style="display: none;">
+                        <button id="saveDraft" class="btn-modern btn-secondary">
+                            <i class="fas fa-save"></i> Save Draft
+                        </button>
+                        <button id="submitForm" class="btn-modern btn-success">
+                            <i class="fas fa-paper-plane"></i> Submit Form
+                        </button>
+                        <button id="clearUserForm" class="btn-modern btn-danger">
+                            <i class="fas fa-times"></i> Clear Form
+                        </button>
+                    </div>
+
+                    <!-- Submission Status -->
+                    <div id="submissionStatus" class="submission-status"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Success Modal -->
+        <div id="successModal" class="modal">
+            <div class="modal-content success">
+                <div class="modal-header">
+                    <h3><i class="fas fa-check-circle"></i> Success!</h3>
+                </div>
+                <div class="modal-body">
+                    <div id="successMessage">
+                        <p>Your form has been submitted successfully!</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="closeSuccess" class="btn-modern btn-primary">Close</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Error Modal -->
+        <div id="errorModal" class="modal">
+            <div class="modal-content error">
+                <div class="modal-header">
+                    <h3><i class="fas fa-exclamation-triangle"></i> Error</h3>
+                </div>
+                <div class="modal-body">
+                    <div id="errorMessage">
+                        <p>An error occurred. Please try again.</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="closeError" class="btn-modern btn-secondary">Close</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading Overlay -->
+        <div id="loadingOverlay" class="loading-overlay">
+            <div class="loading-content">
+                <div class="loading-spinner"></div>
+                <p id="loadingMessage">Loading...</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="secure-supabase-connector.js"></script>
+    <script src="user-forms.js"></script>
+</body>
+</html>

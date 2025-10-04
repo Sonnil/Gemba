@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database Connection Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
+    <script src="secure-key-manager.js"></script>
+    <script src="secure-config.js"></script>
+    <script>
+        // Embedded database configuration for GitHub Pages testing
+        window.EMBEDDED_CONFIG = {
+            SUPABASE_URL: 'https://rctzljfqsafjmbljeyrb.supabase.co',
+            SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJjdHpsamZxc2Fmam1ibGpleXJiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1MTY5NDAsImV4cCI6MjA3NTA5Mjk0MH0.cwIecLyT7z3eQhUl0HWimrWZUDCkO6-jSdxO8xBLcuc'
+        };
+        console.log('🔧 Debug page with embedded config loaded');
+        
+        // Quick test of EMBEDDED_CONFIG
+        setTimeout(() => {
+            console.log('=== EMBEDDED_CONFIG TEST ===');
+            console.log('EMBEDDED_CONFIG exists:', !!window.EMBEDDED_CONFIG);
+            if (window.EMBEDDED_CONFIG) {
+                console.log('URL:', window.EMBEDDED_CONFIG.SUPABASE_URL);
+                console.log('Key length:', window.EMBEDDED_CONFIG.SUPABASE_ANON_KEY?.length);
+                console.log('Key preview:', window.EMBEDDED_CONFIG.SUPABASE_ANON_KEY?.substring(0, 20) + '...');
+            }
+            console.log('Supabase library:', !!window.supabase);
+            console.log('==============================');
+        }, 1000);
+    </script>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-result { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Database Connection Test</h1>
+    <button onclick="testNetwork()">Test Network</button>
+    <button onclick="testConnection()">Test Database Connection</button>
+    <button onclick="unlockServiceKey()">🔐 Unlock Service Key</button>
+    <button onclick="testTables()">Test Table Queries</button>
+    <button onclick="clearResults()">Clear Results</button>
+    
+    <div id="results"></div>
+
+    <script>
+        // SECURITY: Never hardcode keys in production
+        // These should be loaded from a secure config file or environment
+        let supabaseUrl = '';
+        let supabaseAnonKey = '';
+        let supabaseServiceKey = '';
+        
+        // Load configuration securely
+        async function loadConfig() {
+            try {
+                // Try secure config first, then fallback to regular config
+                let config;
+                
+                addResult(`🔍 Checking configuration sources...`, 'info');
+                addResult(`FLEXFORM_SECURE_CONFIG available: ${!!window.FLEXFORM_SECURE_CONFIG}`, 'info');
+                addResult(`FLEXFORM_CONFIG available: ${!!window.FLEXFORM_CONFIG}`, 'info');
+                
+                if (window.FLEXFORM_SECURE_CONFIG) {
+                    addResult('🔐 Loading secure configuration...', 'info');
+                    config = await window.secureConfigLoader.getSecureConfig(false);
+                    supabaseUrl = config.supabaseUrl;
+                    supabaseAnonKey = config.supabaseAnonKey;
+                    addResult(`🔑 Secure config anon key length: ${config.supabaseAnonKey ? config.supabaseAnonKey.length : 'undefined'}`, 'info');
+                } else if (window.FLEXFORM_CONFIG) {
+                    addResult('📄 Loading standard configuration...', 'info');
+                    supabaseUrl = window.FLEXFORM_CONFIG.SUPABASE_URL;
+                    supabaseAnonKey = window.FLEXFORM_CONFIG.SUPABASE_ANON_KEY;
+                    addResult(`🔑 Standard config anon key length: ${window.FLEXFORM_CONFIG.SUPABASE_ANON_KEY ? window.FLEXFORM_CONFIG.SUPABASE_ANON_KEY.length : 'undefined'}`, 'info');
+                } else {
+                    addResult('❌ No configuration found. Please set up config.js or secure-config.js', 'error');
+                    return false;
+                }
+                
+                if (!supabaseUrl || !supabaseAnonKey || supabaseAnonKey === 'your-anon-key-here') {
+                    addResult('❌ Invalid configuration. Please check your keys', 'error');
+                    return false;
+                }
+                
+                addResult(`✅ Configuration loaded: ${supabaseUrl}`, 'success');
+                addResult(`🔑 Anon key (last 10 chars): ...${supabaseAnonKey.slice(-10)}`, 'info');
+                addResult(`🔑 Full anon key length: ${supabaseAnonKey.length}`, 'info');
+                
+                // Quick key validation
+                if (!supabaseAnonKey.startsWith('eyJ')) {
+                    addResult(`❌ Invalid key format - should start with 'eyJ'`, 'error');
+                }
+                
+                return true;
+            } catch (error) {
+                addResult(`Config loading error: ${error.message}`, 'error');
+                return false;
+            }
+        }
+        
+        let supabaseClient = null;
+
+        function addResult(message, type = 'info') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong>: ${message}`;
+            results.appendChild(div);
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+
+        async function testNetwork() {
+            try {
+                addResult('Testing network connectivity to Supabase...', 'info');
+                
+                // Test basic HTTP connectivity
+                const response = await fetch(`${supabaseUrl}/rest/v1/`, {
+                    method: 'GET',
+                    headers: {
+                        'apikey': supabaseAnonKey,
+                        'Authorization': `Bearer ${supabaseAnonKey}`
+                    }
+                });
+                
+                addResult(`HTTP Status: ${response.status} ${response.statusText}`, response.ok ? 'success' : 'error');
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    addResult(`Response body: ${errorText}`, 'error');
+                }
+                
+                // Test CORS
+                addResult(`CORS headers present: ${response.headers.has('access-control-allow-origin')}`, 'info');
+                
+            } catch (networkError) {
+                addResult(`Network error: ${networkError.message}`, 'error');
+                addResult(`Network error type: ${networkError.name}`, 'error');
+                addResult(`Full network error: ${JSON.stringify(networkError)}`, 'error');
+            }
+        }
+
+        async function unlockServiceKey() {
+            try {
+                if (!window.secureConfigLoader) {
+                    addResult('❌ Secure config not available', 'error');
+                    return;
+                }
+
+                addResult('🔐 Unlocking service key...', 'info');
+                const config = await window.secureConfigLoader.getSecureConfig(true);
+                
+                if (config.supabaseServiceKey) {
+                    addResult('✅ Service key unlocked successfully!', 'success');
+                    addResult('Service key is now available for admin operations', 'info');
+                    supabaseServiceKey = config.supabaseServiceKey;
+                } else {
+                    addResult('❌ Failed to unlock service key', 'error');
+                }
+            } catch (error) {
+                addResult(`Service key unlock failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function testConnection() {
+            try {
+                addResult('Testing Supabase connection with ANON key...', 'info');
+                
+                supabaseClient = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
+                
+                // Test basic connection with gemba_requests (not form_submissions)
+                const { data, error } = await supabaseClient.from('gemba_requests').select('count', { count: 'exact', head: true });
+                
+                if (error) {
+                    addResult(`ANON key connection error: ${error.message || 'No error message'}`, 'error');
+                    addResult(`Error code: ${error.code || 'No error code'}`, 'error');
+                    addResult(`Error details: ${error.details || 'No details'}`, 'error');
+                    addResult(`Full error object: ${JSON.stringify(error)}`, 'error');
+                    
+                    // Try with service key
+                    addResult('Trying with SERVICE key...', 'info');
+                    try {
+                        const serviceClient = window.supabase.createClient(supabaseUrl, supabaseServiceKey);
+                        const { data: serviceData, error: serviceError } = await serviceClient.from('gemba_requests').select('count', { count: 'exact', head: true });
+                        
+                        if (serviceError) {
+                            addResult(`SERVICE key error: ${serviceError.message || 'No error message'}`, 'error');
+                            addResult(`SERVICE error details: ${JSON.stringify(serviceError)}`, 'error');
+                        } else {
+                            addResult('✅ SERVICE key connection works!', 'success');
+                            addResult(`Records found: ${serviceData}`, 'success');
+                            supabaseClient = serviceClient; // Use service client
+                        }
+                    } catch (serviceException) {
+                        addResult(`SERVICE key exception: ${serviceException.message}`, 'error');
+                        addResult(`SERVICE exception details: ${JSON.stringify(serviceException)}`, 'error');
+                    }
+                } else {
+                    addResult('✅ ANON key connection works!', 'success');
+                    addResult(`Connection URL: ${supabaseUrl}`, 'info');
+                }
+            } catch (error) {
+                addResult(`Connection failed: ${error.message}`, 'error');
+                addResult(`Full error: ${JSON.stringify(error)}`, 'error');
+                addResult(`Supabase URL: ${supabaseUrl}`, 'info');
+                addResult(`Anon Key (first 20 chars): ${supabaseAnonKey.substring(0, 20)}...`, 'info');
+            }
+        }
+
+        async function testTables() {
+            if (!supabaseClient) {
+                addResult('Please test connection first!', 'error');
+                return;
+            }
+
+            try {
+                addResult('Testing table queries...', 'info');
+
+                // Test form_submissions table (primary data table)
+                const { count: formCount, error: formError } = await supabaseClient
+                    .from('form_submissions')
+                    .select('*', { count: 'exact', head: true });
+
+                if (formError) {
+                    addResult(`form_submissions error: ${formError.message}`, 'error');
+                } else {
+                    addResult(`✅ form_submissions table: ${formCount || 0} records`, 'success');
+                }
+
+                // Test gemba_requests table (secondary/backup table)
+                const { count: gembaCount, error: gembaError } = await supabaseClient
+                    .from('gemba_requests')
+                    .select('*', { count: 'exact', head: true });
+
+                if (gembaError) {
+                    addResult(`gemba_requests error: ${gembaError.message}`, 'error');
+                } else {
+                    addResult(`✅ gemba_requests table: ${gembaCount || 0} records`, 'success');
+                }
+
+                // Test this month's data
+                const now = new Date();
+                const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+                const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59).toISOString();
+
+                const { count: monthCount, error: monthError } = await supabaseClient
+                    .from('form_submissions')
+                    .select('*', { count: 'exact', head: true })
+                    .gte('submitted_at', startOfMonth)
+                    .lte('submitted_at', endOfMonth);
+
+                if (monthError) {
+                    addResult(`This month query error: ${monthError.message}`, 'error');
+                } else {
+                    addResult(`✅ This month (form_submissions): ${monthCount || 0} records`, 'success');
+                }
+
+                // Calculate totals
+                const totalRecords = (formCount || 0) + (gembaCount || 0);
+                addResult(`📊 TOTAL RECORDS: ${totalRecords}`, 'success');
+
+            } catch (error) {
+                addResult(`Table test failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Auto-run tests on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            addResult('Database debug page loaded', 'info');
+            
+            // Check if Supabase library loaded
+            if (typeof window.supabase === 'undefined') {
+                addResult('❌ Supabase library not loaded!', 'error');
+                addResult('Check if CDN is accessible', 'error');
+            } else {
+                addResult('✅ Supabase library loaded successfully', 'success');
+                
+                // Load config first, then test
+                loadConfig().then(configLoaded => {
+                    if (configLoaded) {
+                        testNetwork();
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

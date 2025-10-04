@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Supabase HTTP Test</title>
+    <script src="config.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .result { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+    </style>
+</head>
+<body>
+    <h1>Simple Supabase HTTP Test</h1>
+    <button onclick="testRawHTTP()">Test Raw HTTP API</button>
+    <div id="results"></div>
+
+    <script>
+        // SECURITY: Keys removed for safety
+        // Please configure these in your config.js file
+        const supabaseUrl = window.FLEXFORM_CONFIG?.SUPABASE_URL || '';
+        const serviceKey = window.FLEXFORM_CONFIG?.SUPABASE_SERVICE_KEY || '';
+        
+        function addResult(message, type = 'info') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `result ${type}`;
+            div.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong>: ${message}`;
+            results.appendChild(div);
+        }
+
+        async function testRawHTTP() {
+            try {
+                addResult('Testing raw HTTP access to Supabase...', 'info');
+                
+                // Test 1: Basic connectivity
+                addResult('Step 1: Testing basic connectivity...', 'info');
+                const response1 = await fetch(`${supabaseUrl}/rest/v1/`);
+                addResult(`Basic response: ${response1.status} ${response1.statusText}`, response1.ok ? 'success' : 'error');
+                
+                // Test 2: With service key
+                addResult('Step 2: Testing with service key...', 'info');
+                const response2 = await fetch(`${supabaseUrl}/rest/v1/gemba_requests?select=count`, {
+                    headers: {
+                        'apikey': serviceKey,
+                        'Authorization': `Bearer ${serviceKey}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                addResult(`Service key response: ${response2.status} ${response2.statusText}`, response2.ok ? 'success' : 'error');
+                
+                if (response2.ok) {
+                    const data = await response2.json();
+                    addResult(`Data received: ${JSON.stringify(data)}`, 'success');
+                } else {
+                    const errorText = await response2.text();
+                    addResult(`Error response: ${errorText}`, 'error');
+                }
+                
+                // Test 3: Count query
+                addResult('Step 3: Testing count query...', 'info');
+                const response3 = await fetch(`${supabaseUrl}/rest/v1/gemba_requests?select=count(*)`, {
+                    headers: {
+                        'apikey': serviceKey,
+                        'Authorization': `Bearer ${serviceKey}`,
+                        'Content-Type': 'application/json',
+                        'Prefer': 'count=exact'
+                    }
+                });
+                
+                addResult(`Count query response: ${response3.status}`, response3.ok ? 'success' : 'error');
+                
+                if (response3.ok) {
+                    const countHeader = response3.headers.get('content-range');
+                    addResult(`Count from header: ${countHeader}`, 'success');
+                }
+                
+            } catch (error) {
+                addResult(`HTTP test failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Auto-run test
+        window.addEventListener('DOMContentLoaded', () => {
+            testRawHTTP();
+        });
+    </script>
+</body>
+</html>

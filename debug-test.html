@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FLEX-FORM Debug Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f0f0f0; }
+        .test-result { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .pass { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .fail { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+    </style>
+</head>
+<body>
+    <h1>FLEX-FORM Environment Test</h1>
+    <div id="results"></div>
+
+    <script>
+        function addResult(test, status, details) {
+            const div = document.createElement('div');
+            div.className = `test-result ${status}`;
+            div.innerHTML = `<strong>${test}:</strong> ${status.toUpperCase()} - ${details}`;
+            document.getElementById('results').appendChild(div);
+        }
+
+        // Test environment
+        addResult('Environment', 'info', `URL: ${window.location.href}`);
+        addResult('User Agent', 'info', navigator.userAgent);
+        addResult('Protocol', 'info', window.location.protocol);
+
+        // Test localStorage
+        try {
+            localStorage.setItem('test', 'value');
+            const value = localStorage.getItem('test');
+            localStorage.removeItem('test');
+            addResult('localStorage', value === 'value' ? 'pass' : 'fail', 'Working');
+        } catch (e) {
+            addResult('localStorage', 'fail', e.message);
+        }
+
+        // Test console
+        try {
+            console.log('Console test');
+            addResult('Console', 'pass', 'Available');
+        } catch (e) {
+            addResult('Console', 'fail', e.message);
+        }
+
+        // Test fetch/external resources
+        fetch('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap')
+            .then(response => {
+                addResult('External Resources (Fonts)', response.ok ? 'pass' : 'fail', `Status: ${response.status}`);
+            })
+            .catch(error => {
+                addResult('External Resources (Fonts)', 'fail', error.message);
+            });
+
+        // Test Supabase CDN
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+        script.onload = () => addResult('Supabase CDN', 'pass', 'Loaded successfully');
+        script.onerror = () => addResult('Supabase CDN', 'fail', 'Failed to load');
+        document.head.appendChild(script);
+
+        // Test Font Awesome
+        const faScript = document.createElement('link');
+        faScript.rel = 'stylesheet';
+        faScript.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css';
+        faScript.onload = () => addResult('Font Awesome', 'pass', 'Loaded successfully');
+        faScript.onerror = () => addResult('Font Awesome', 'fail', 'Failed to load');
+        document.head.appendChild(faScript);
+
+        // Test DOM ready
+        document.addEventListener('DOMContentLoaded', function() {
+            addResult('DOM Ready', 'pass', 'DOMContentLoaded fired');
+        });
+
+        // Test after short delay
+        setTimeout(() => {
+            addResult('Page Stability', 'pass', 'Page loaded and stable for 2 seconds');
+        }, 2000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FLEX-FORM - User Portal (Simple)</title>
+    <link rel="stylesheet" href="user-styles.css">
+    <link rel="stylesheet" href="modern-utilities.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        /* Ensure tabs are visible */
+        .navigation {
+            display: flex !important;
+            gap: 1rem !important;
+            flex-wrap: wrap !important;
+            justify-content: center !important;
+            margin: 1rem 0 !important;
+            background: rgba(0,0,0,0.1) !important;
+            padding: 1rem !important;
+            border-radius: 10px !important;
+        }
+        
+        .nav-tab {
+            display: flex !important;
+            align-items: center !important;
+            gap: 10px !important;
+            padding: 12px 20px !important;
+            background: rgba(255, 255, 255, 0.2) !important;
+            border: 2px solid rgba(255, 255, 255, 0.3) !important;
+            border-radius: 20px !important;
+            text-decoration: none !important;
+            color: white !important;
+            font-weight: 600 !important;
+            cursor: pointer !important;
+            font-size: 16px !important;
+            transition: all 0.3s ease !important;
+        }
+        
+        .nav-tab:hover {
+            background: rgba(255, 255, 255, 0.3) !important;
+            transform: translateY(-2px) !important;
+        }
+        
+        .nav-tab.active {
+            background: rgba(255, 255, 255, 0.4) !important;
+            border-color: rgba(255, 255, 255, 0.6) !important;
+        }
+        
+        .section {
+            display: none !important;
+            padding: 30px !important;
+            background: rgba(255, 255, 255, 0.95) !important;
+            border-radius: 16px !important;
+            margin: 20px 0 !important;
+        }
+        
+        .section.active {
+            display: block !important;
+        }
+        
+        /* Make sure Forms tab is very visible */
+        #formsTab {
+            background: linear-gradient(135deg, #28a745, #20c997) !important;
+            color: white !important;
+            font-weight: bold !important;
+            border: 3px solid rgba(255,255,255,0.5) !important;
+        }
+        
+        .test-indicator {
+            background: #ff0000;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            font-weight: bold;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1><i class="fas fa-clipboard-list"></i> FLEX-FORM</h1>
+            <p>🔐 Secure Form Submission Portal</p>
+            
+            <div class="test-indicator">
+                ⚠️ FORMS TAB TEST VERSION - If you can't see the green FORMS button below, there's a CSS issue
+            </div>
+            
+            <!-- Navigation -->
+            <nav class="navigation">
+                <a href="#" id="dashboardTab" class="nav-tab active">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                </a>
+                <a href="#" id="formsTab" class="nav-tab">
+                    <i class="fas fa-edit"></i> Forms
+                </a>
+                <a href="index.html" class="nav-tab admin-link">
+                    <i class="fas fa-cog"></i> Admin Panel
+                </a>
+            </nav>
+        </header>
+
+        <div class="main-content">
+            
+            <!-- Dashboard Section -->
+            <div id="dashboardSection" class="section active">
+                <div class="dashboard-header">
+                    <h2><i class="fas fa-chart-dashboard"></i> Dashboard</h2>
+                    <p>This is the dashboard section. Click the green "Forms" button above to switch to forms.</p>
+                </div>
+            </div>
+
+            <!-- Forms Section -->
+            <div id="formsSection" class="section">
+                <div class="step-header">
+                    <h2><i class="fas fa-clipboard-list"></i> Forms Section</h2>
+                    <p>🎉 SUCCESS! You can see the Forms tab and it's working!</p>
+                    <p>This proves that the Forms functionality is present.</p>
+                </div>
+                
+                <div class="templates-grid">
+                    <div class="template-card" style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin: 10px; text-align: center;">
+                        <h3>Template 1: Basic Contact Form</h3>
+                        <p>Simple contact information form</p>
+                        <button class="btn-modern btn-primary">Use This Form</button>
+                    </div>
+                    <div class="template-card" style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin: 10px; text-align: center;">
+                        <h3>Template 2: Feedback Form</h3>
+                        <p>Customer feedback and ratings</p>
+                        <button class="btn-modern btn-success">Use This Form</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        console.log('Simple Forms Test - Script Loading...');
+        
+        // Simple tab switching
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM Ready - Setting up tabs');
+            
+            document.querySelectorAll('.nav-tab:not(.admin-link)').forEach(tab => {
+                tab.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const tabId = e.target.closest('.nav-tab').id;
+                    console.log('Tab clicked:', tabId);
+                    
+                    // Remove active from all
+                    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+                    
+                    // Add active to clicked
+                    document.getElementById(tabId).classList.add('active');
+                    
+                    // Show section
+                    const sectionMap = {
+                        'dashboardTab': 'dashboardSection',
+                        'formsTab': 'formsSection'
+                    };
+                    
+                    const sectionId = sectionMap[tabId];
+                    if (sectionId) {
+                        document.getElementById(sectionId).classList.add('active');
+                        console.log('Showing section:', sectionId);
+                    }
+                });
+            });
+            
+            console.log('Tabs setup complete');
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Connection - FLEX-FORM</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // Embedded database configuration for GitHub Pages
+        window.EMBEDDED_CONFIG = {
+            SUPABASE_URL: 'https://rctzljfqsafjmbljeyrb.supabase.co',
+            SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJjdHpsamZxc2Fmam1ibGpleXJiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1MTY5NDAsImV4cCI6MjA3NTA5Mjk0MH0.cwIecLyT7z3eQhUl0HWimrWZUDCkO6-jSdxO8xBLcuc'
+        };
+    </script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .warning { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        #log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 20px 0;
+            font-family: monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 FLEX-FORM Database Connection Debug</h1>
+        
+        <div class="status info">
+            <strong>Current URL:</strong> <span id="currentUrl"></span><br>
+            <strong>User Agent:</strong> <span id="userAgent"></span><br>
+            <strong>Timestamp:</strong> <span id="timestamp"></span>
+        </div>
+        
+        <div>
+            <button onclick="testDirectConnection()">Test Direct Connection</button>
+            <button onclick="testSupabaseClient()">Test Supabase Client</button>
+            <button onclick="testDataFetch()">Test Data Fetch</button>
+            <button onclick="clearLog()">Clear Log</button>
+        </div>
+        
+        <div id="statusDisplay" class="status info">
+            Ready to test database connection...
+        </div>
+        
+        <div id="log"></div>
+    </div>
+
+    <script>
+        // Initialize display
+        document.getElementById('currentUrl').textContent = window.location.href;
+        document.getElementById('userAgent').textContent = navigator.userAgent;
+        document.getElementById('timestamp').textContent = new Date().toISOString();
+        
+        let supabaseClient = null;
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logElement = document.getElementById('log');
+            logElement.textContent += `[${timestamp}] ${message}\n`;
+            logElement.scrollTop = logElement.scrollHeight;
+            console.log(`[${timestamp}] ${message}`);
+        }
+        
+        function updateStatus(message, type = 'info') {
+            const statusElement = document.getElementById('statusDisplay');
+            statusElement.textContent = message;
+            statusElement.className = `status ${type}`;
+        }
+        
+        function clearLog() {
+            document.getElementById('log').textContent = '';
+        }
+        
+        async function testDirectConnection() {
+            log('🔧 Testing direct connection to Supabase...');
+            updateStatus('Testing direct connection...', 'info');
+            
+            try {
+                const url = window.EMBEDDED_CONFIG.SUPABASE_URL;
+                const key = window.EMBEDDED_CONFIG.SUPABASE_ANON_KEY;
+                
+                log(`📍 URL: ${url}`);
+                log(`🔑 Key length: ${key ? key.length : 0}`);
+                log(`🔑 Key starts with eyJ: ${key ? key.startsWith('eyJ') : false}`);
+                
+                const response = await fetch(`${url}/rest/v1/`, {
+                    headers: {
+                        'apikey': key,
+                        'Authorization': `Bearer ${key}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                log(`📡 Response status: ${response.status} ${response.statusText}`);
+                
+                if (response.ok) {
+                    log('✅ Direct connection successful!');
+                    updateStatus('Direct connection successful!', 'success');
+                    return true;
+                } else {
+                    const errorText = await response.text();
+                    log(`❌ Direct connection failed: ${errorText}`);
+                    updateStatus('Direct connection failed', 'error');
+                    return false;
+                }
+            } catch (error) {
+                log(`❌ Direct connection error: ${error.message}`);
+                updateStatus(`Connection error: ${error.message}`, 'error');
+                return false;
+            }
+        }
+        
+        async function testSupabaseClient() {
+            log('🔧 Testing Supabase client creation...');
+            updateStatus('Testing Supabase client...', 'info');
+            
+            try {
+                const url = window.EMBEDDED_CONFIG.SUPABASE_URL;
+                const key = window.EMBEDDED_CONFIG.SUPABASE_ANON_KEY;
+                
+                log(`📱 Creating Supabase client...`);
+                log(`   window.supabase available: ${!!window.supabase}`);
+                log(`   createClient function: ${!!window.supabase?.createClient}`);
+                
+                if (!window.supabase) {
+                    throw new Error('Supabase library not loaded');
+                }
+                
+                supabaseClient = window.supabase.createClient(url, key);
+                log('✅ Supabase client created successfully!');
+                updateStatus('Supabase client created successfully!', 'success');
+                return true;
+            } catch (error) {
+                log(`❌ Supabase client creation failed: ${error.message}`);
+                updateStatus(`Client creation failed: ${error.message}`, 'error');
+                return false;
+            }
+        }
+        
+        async function testDataFetch() {
+            log('🔧 Testing data fetch from database...');
+            updateStatus('Testing data fetch...', 'info');
+            
+            try {
+                if (!supabaseClient) {
+                    log('⚠️ No Supabase client - creating one...');
+                    const success = await testSupabaseClient();
+                    if (!success) {
+                        throw new Error('Failed to create Supabase client');
+                    }
+                }
+                
+                log('📊 Fetching data from gemba_requests...');
+                const { data, error, count } = await supabaseClient
+                    .from('gemba_requests')
+                    .select('*', { count: 'exact', head: true });
+                
+                if (error) {
+                    log(`❌ Data fetch error: ${error.message}`);
+                    log(`   Error details: ${JSON.stringify(error, null, 2)}`);
+                    
+                    // Try form_submissions as fallback
+                    log('🔄 Trying form_submissions table...');
+                    const { data: formData, error: formError, count: formCount } = await supabaseClient
+                        .from('form_submissions')
+                        .select('*', { count: 'exact', head: true });
+                    
+                    if (formError) {
+                        log(`❌ form_submissions fetch error: ${formError.message}`);
+                        updateStatus(`Data fetch failed: ${error.message}`, 'error');
+                        return false;
+                    } else {
+                        log(`✅ form_submissions table accessible! Count: ${formCount}`);
+                        updateStatus(`Data fetch successful! Found ${formCount} records in form_submissions`, 'success');
+                        return true;
+                    }
+                } else {
+                    log(`✅ gemba_requests table accessible! Count: ${count}`);
+                    updateStatus(`Data fetch successful! Found ${count} records in gemba_requests`, 'success');
+                    return true;
+                }
+            } catch (error) {
+                log(`❌ Data fetch exception: ${error.message}`);
+                updateStatus(`Data fetch exception: ${error.message}`, 'error');
+                return false;
+            }
+        }
+        
+        // Auto-run basic tests
+        document.addEventListener('DOMContentLoaded', async () => {
+            log('🚀 Debug page loaded - starting automatic tests...');
+            
+            // Wait a moment for everything to load
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            log('🔍 Environment check:');
+            log(`   EMBEDDED_CONFIG: ${!!window.EMBEDDED_CONFIG}`);
+            log(`   Supabase library: ${!!window.supabase}`);
+            log(`   URL: ${window.location.href}`);
+            
+            // Run tests
+            await testDirectConnection();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await testSupabaseClient();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await testDataFetch();
+            
+            log('🏁 Automatic tests completed!');
+        });
+    </script>
+</body>
+</html>
