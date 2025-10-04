@@ -1347,8 +1347,10 @@
                         let formSubmissionsData = [];
                         let gembaRequestsData = [];
                         
-                        // Query form_submissions table (new entries)
-                        let formQuery = supabaseClient.from('gemba_requests').select('*');
+                        // Query form_submissions table (new template entries only)
+                        let formQuery = supabaseClient.from('form_submissions')
+                            .select('*')
+                            .eq('is_template', false);  // Only actual submissions, not templates
                         if (type === 'month') {
                             const now = new Date();
                             const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
@@ -1359,7 +1361,7 @@
                         const { data: formData, error: formError } = await formQuery;
                         if (!formError && formData) {
                             formSubmissionsData = formData;
-                        }
+                        }                        }
                         
                         // Query gemba_requests table (existing 6,220 records)
                         let gembaQuery = supabaseClient.from('gemba_requests').select('*');
@@ -1384,7 +1386,10 @@
                         dbSubmissions = [...formSubmissionsData, ...gembaRequestsData];
                         
                         console.log(`Fetched database submissions: ${formSubmissionsData.length} from form_submissions, ${gembaRequestsData.length} from gemba_requests`);
-                        if (dbSubmissions.length > 0) {
+                        console.log('DEBUG: Modal data breakdown:');
+                        console.log('  - formSubmissionsData (from form_submissions):', formSubmissionsData.length);
+                        console.log('  - gembaRequestsData (from gemba_requests):', gembaRequestsData.length);
+                        console.log('  - Total combined:', dbSubmissions.length);                        if (dbSubmissions.length > 0) {
                             console.log('Sample database record:', dbSubmissions[0]);
                         }
                         
