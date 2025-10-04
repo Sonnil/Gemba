@@ -818,7 +818,7 @@
                     };
 
                     const { error } = await supabaseClient
-                        .from('form_submissions')
+                        .from('gemba_requests')
                         .insert([dbRecord]);
 
                     if (error) {
@@ -901,31 +901,31 @@
                     try {
                         console.log('Fetching database statistics...');
                         
-                        // Get count from form_submissions table (where data was imported)
+                        // Get count from gemba_requests table (primary data source)
                         const { count: dbTotalCount, error: totalError } = await supabaseClient
-                            .from('form_submissions')
+                            .from('gemba_requests')
                             .select('*', { count: 'exact', head: true });
 
                         if (totalError) {
-                            console.error('Error fetching form_submissions count:', totalError);
+                            console.error('Error fetching gemba_requests count:', totalError);
                             console.log('Fallback: Using localStorage data only');
                         } else {
                             totalCount += (dbTotalCount || 0);
-                            console.log('Database form_submissions:', dbTotalCount);
+                            console.log('Database gemba_requests:', dbTotalCount);
                         }
 
-                        // Also try gemba_requests table (backup)
+                        // Also try form_submissions table (backup for new entries)
                         try {
                             const { count: gembaCount, error: gembaError } = await supabaseClient
-                                .from('gemba_requests')
+                                .from('form_submissions')
                                 .select('*', { count: 'exact', head: true });
 
                             if (!gembaError && gembaCount) {
                                 totalCount += gembaCount;
-                                console.log('Database gemba_requests:', gembaCount);
+                                console.log('Database form_submissions: gembaCount);
                             }
                         } catch (gembaError) {
-                            console.log('gemba_requests table empty or not found');
+                            console.log('form_submissions table empty or not found');
                         }
 
                         // Get this month's count from database
@@ -933,25 +933,25 @@
                         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
                         const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59).toISOString();
 
-                        // Check form_submissions for this month (where data was imported)
+                        // Check gemba_requests for this month (primary data source)
                         const { count: dbMonthCount, error: monthError } = await supabaseClient
-                            .from('form_submissions')
+                            .from('gemba_requests')
                             .select('*', { count: 'exact', head: true })
                             .gte('submitted_at', startOfMonth)
                             .lte('submitted_at', endOfMonth);
 
                         if (monthError) {
-                            console.error('Error fetching form_submissions month count:', monthError);
+                            console.error('Error fetching gemba_requests month count:', monthError);
                         } else {
                             monthCount += (dbMonthCount || 0);
-                            console.log('Database form_submissions this month:', dbMonthCount);
+                            console.log('Database gemba_requests this month:', dbMonthCount);
                         }
 
-                        // Also try gemba_requests for this month (backup)
+                        // Also try form_submissions for this month (backup)
                         try {
                             // For now, include all gemba_requests as they are likely recent imported data
                             const { count: gembaMonthCount, error: gembaMonthError } = await supabaseClient
-                                .from('gemba_requests')
+                                .from('form_submissions')
                                 .select('*', { count: 'exact', head: true });
 
                             if (!gembaMonthError && gembaMonthCount) {
@@ -959,7 +959,7 @@
                                 console.log('Database gemba_requests this month:', gembaMonthCount, '(all records - imported data is recent)');
                             }
                         } catch (gembaMonthError) {
-                            console.log('gemba_requests table empty or not found for monthly query');
+                            console.log('form_submissions table empty or not found for monthly query');
                         }
 
                     } catch (dbError) {
@@ -1157,12 +1157,12 @@
                     try {
                         console.log('Fetching database submissions...');
                         
-                        // Try form_submissions first, then gemba_requests as fallback
+                        // Query both tables: form_submissions (new) and gemba_requests (existing)
                         let formSubmissionsData = [];
                         let gembaRequestsData = [];
                         
-                        // Query form_submissions table
-                        let formQuery = supabaseClient.from('form_submissions').select('*');
+                        // Query form_submissions table (new entries)
+                        let formQuery = supabaseClient.from('gemba_requests').select('*');
                         if (type === 'month') {
                             const now = new Date();
                             const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
@@ -1175,7 +1175,7 @@
                             formSubmissionsData = formData;
                         }
                         
-                        // Query gemba_requests table
+                        // Query gemba_requests table (existing 6,220 records)
                         let gembaQuery = supabaseClient.from('gemba_requests').select('*');
                         if (type === 'month') {
                             const now = new Date();
