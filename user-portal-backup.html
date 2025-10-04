@@ -14,7 +14,7 @@
     <script src="secure-key-manager.js?v=1.5"></script>
     <script src="secure-config.js?v=1.5"></script>
     <script>
-        // *** GEMBA PORTAL v1.0 *** - (2025-10-04-MODAL-FIX) ***
+        // *** GEMBA PORTAL v1.0 *** - (2025-10-03-CLEAN-START) ***
         console.log('🚀 GEMBA PORTAL v1.0: Clean repository start');
         window.EMBEDDED_CONFIG = {
             SUPABASE_URL: 'https://rctzljfqsafjmbljeyrb.supabase.co',
@@ -441,7 +441,7 @@
             <h1>🚀 Gemba Portal Dashboard</h1>
             <p>Submit data using secure, dynamic forms</p>
             <div style="margin-top: 10px; background: rgba(255,255,255,0.2); padding: 8px 15px; border-radius: 20px; font-size: 0.85rem;">
-                � GEMBA PORTAL v2.0 - DATABASE CONNECTED: 2025-10-04 �
+                � GEMBA PORTAL v1.0 - DATABASE CONNECTED: 2025-10-03 �
             </div>
             <div style="margin-top: 15px;">
                 <a href="index.html" style="color: rgba(255,255,255,0.8); text-decoration: none; font-size: 0.9rem;">
@@ -818,7 +818,7 @@
                     };
 
                     const { error } = await supabaseClient
-                        .from('gemba_requests')
+                        .from('form_submissions')
                         .insert([dbRecord]);
 
                     if (error) {
@@ -901,32 +901,31 @@
                     try {
                         console.log('Fetching database statistics...');
                         
-                        // Get count from gemba_requests table (primary data source)
+                        // Get count from form_submissions table (where data was imported)
                         const { count: dbTotalCount, error: totalError } = await supabaseClient
-                            .from('gemba_requests')
+                            .from('form_submissions')
                             .select('*', { count: 'exact', head: true });
 
                         if (totalError) {
-                            console.error('Error fetching gemba_requests count:', totalError);
+                            console.error('Error fetching form_submissions count:', totalError);
                             console.log('Fallback: Using localStorage data only');
                         } else {
                             totalCount += (dbTotalCount || 0);
-                            console.log('Database gemba_requests:', dbTotalCount);
+                            console.log('Database form_submissions:', dbTotalCount);
                         }
 
-                        // Also try form_submissions table (backup for new entries)
+                        // Also try gemba_requests table (backup)
                         try {
                             const { count: gembaCount, error: gembaError } = await supabaseClient
-                                .from('form_submissions')
-                                .select('*', { count: 'exact', head: true })
-                                .eq('is_template', false);  // Only count actual submissions, not templates
+                                .from('gemba_requests')
+                                .select('*', { count: 'exact', head: true });
 
                             if (!gembaError && gembaCount) {
                                 totalCount += gembaCount;
-                                console.log('Database form_submissions (non-templates):', gembaCount);
-                            }                            }
+                                console.log('Database gemba_requests:', gembaCount);
+                            }
                         } catch (gembaError) {
-                            console.log('form_submissions table empty or not found');
+                            console.log('gemba_requests table empty or not found');
                         }
 
                         // Get this month's count from database
@@ -934,34 +933,33 @@
                         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
                         const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59).toISOString();
 
-                        // Check gemba_requests for this month (primary data source)
+                        // Check form_submissions for this month (where data was imported)
                         const { count: dbMonthCount, error: monthError } = await supabaseClient
-                            .from('gemba_requests')
+                            .from('form_submissions')
                             .select('*', { count: 'exact', head: true })
                             .gte('submitted_at', startOfMonth)
                             .lte('submitted_at', endOfMonth);
 
                         if (monthError) {
-                            console.error('Error fetching gemba_requests month count:', monthError);
+                            console.error('Error fetching form_submissions month count:', monthError);
                         } else {
                             monthCount += (dbMonthCount || 0);
-                            console.log('Database gemba_requests this month:', dbMonthCount);
+                            console.log('Database form_submissions this month:', dbMonthCount);
                         }
 
-                        // Also try form_submissions for this month (backup)
+                        // Also try gemba_requests for this month (backup)
                         try {
                             // For now, include all gemba_requests as they are likely recent imported data
                             const { count: gembaMonthCount, error: gembaMonthError } = await supabaseClient
-                                .from('form_submissions')
-                                .select('*', { count: 'exact', head: true })
-                                .eq('is_template', false);  // Only count actual submissions, not templates
+                                .from('gemba_requests')
+                                .select('*', { count: 'exact', head: true });
 
                             if (!gembaMonthError && gembaMonthCount) {
                                 monthCount += gembaMonthCount;
-                                console.log('Database form_submissions this month (non-templates):', gembaMonthCount);
-                            }                            }
+                                console.log('Database gemba_requests this month:', gembaMonthCount, '(all records - imported data is recent)');
+                            }
                         } catch (gembaMonthError) {
-                            console.log('form_submissions table empty or not found for monthly query');
+                            console.log('gemba_requests table empty or not found for monthly query');
                         }
 
                     } catch (dbError) {
@@ -1063,27 +1061,7 @@
                     
                     // Test connection immediately
                     console.log('🧪 Testing database connection...');
-                    
-                    // *** DIRECT TABLE TEST ***
-                    console.log('🧪 DIRECT TABLE TEST: Checking gemba_requests table...');
                     try {
-                        const { data: testData, error: testError, count: testCount } = await supabaseClient
-                            .from('gemba_requests')
-                            .select('*', { count: 'exact' })
-                            .limit(5);
-                        
-                        console.log('📊 DIRECT TEST RESULTS:');
-                        console.log('  - Error:', testError);
-                        console.log('  - Total count:', testCount);
-                        console.log('  - Sample records:', testData);
-                        
-                        if (testData && testData.length > 0) {
-                            console.log('  - First record columns:', Object.keys(testData[0]));
-                            console.log('  - First record sample:', testData[0]);
-                        }
-                    } catch (directTestError) {
-                        console.error('❌ DIRECT TABLE TEST FAILED:', directTestError);
-                    }                    try {
                         const { count, error } = await supabaseClient
                             .from('gemba_requests')
                             .select('*', { count: 'exact', head: true });
@@ -1097,8 +1075,7 @@
                             console.log('✅ Database connection verified! Found', count, 'records');
                             document.getElementById('connectionStatus').innerHTML = 
                                 '<span style="color: #38a169;">●</span> Connected to database (' + count + ' records)';
-                            // Load available forms from database
-                            loadAvailableForms();                        }
+                        }
                     } catch (testError) {
                         console.error('❌ Connection test exception:', testError);
                         isConnectedToDatabase = true; // Still set as connected for basic functionality
@@ -1148,191 +1125,6 @@
         });
 
         // Modal functions for data visualization
-        // Load available forms from database
-        async function loadAvailableForms() {
-            const formsContainer = document.getElementById('formsContainer');
-            const availableFormsCount = document.querySelector('.stat-card h3');
-            
-            if (!isConnectedToDatabase || !supabaseClient) {
-                console.log('Database not connected, showing default forms');
-                return;
-            }
-            
-            try {
-                console.log('Loading templates from database...');
-                const { data: templates, error } = await supabaseClient
-                    .from('form_submissions')
-                    .select('*')
-                    .eq('is_template', true);
-                
-                if (error) {
-                    console.error('Error loading templates:', error);
-                    return;
-                }
-                
-                if (templates && templates.length > 0) {
-                    console.log(`Found ${templates.length} templates in database`);
-                    
-                    // Update forms count
-                    availableFormsCount.textContent = templates.length;
-                    
-                    // Clear existing forms and add database templates
-                    formsContainer.innerHTML = '';
-                    
-                    templates.forEach(template => {
-                        const formCard = document.createElement('div');
-                        formCard.className = 'form-card';
-                        formCard.onclick = () => selectDynamicForm(template);
-                        
-                        const fields = JSON.parse(template.form_fields || '[]');
-                        const fieldCount = fields.length;
-                        
-                        formCard.innerHTML = `
-                            <div class="form-card-header">
-                                <h3>${template.form_name || 'Untitled Form'}</h3>
-                                <span class="field-badge">${fieldCount} Fields</span>
-                            </div>
-                            <p>${template.form_description || 'Dynamic form created by admin'}</p>
-                            <button class="form-btn" onclick="event.stopPropagation(); selectDynamicForm(template)">
-                                Select Form
-                            </button>
-                        `;
-                        
-                        formsContainer.appendChild(formCard);
-                    });
-                } else {
-                    console.log('No templates found in database');
-                }
-            } catch (error) {
-                console.error('Error loading forms:', error);
-            }
-        }
-        
-        // Handle dynamic form selection
-        function selectDynamicForm(template) {
-            console.log('Selected dynamic form:', template.form_name);
-            
-            // Hide form selection and show dynamic form
-            document.getElementById('formSelection').style.display = 'none';
-            
-            // Create dynamic form based on template
-            const formContainer = document.getElementById('dynamicFormContainer') || createDynamicFormContainer();
-            formContainer.innerHTML = generateDynamicForm(template);
-            formContainer.style.display = 'block';
-        }
-        
-        // Create dynamic form container if it doesn't exist
-        function createDynamicFormContainer() {
-            const container = document.createElement('div');
-            container.id = 'dynamicFormContainer';
-            container.style.display = 'none';
-            document.getElementById('forms').appendChild(container);
-            return container;
-        }
-        
-        // Generate dynamic form HTML
-        function generateDynamicForm(template) {
-            const fields = JSON.parse(template.form_fields || '[]');
-            
-            let formHTML = `
-                <div class="form-container">
-                    <h2>${template.form_title || template.form_name}</h2>
-                    <p>${template.form_description || ''}</p>
-                    <form id="dynamicForm" onsubmit="submitDynamicForm(event, '${template.form_name}')">
-            `;
-            
-            fields.forEach(field => {
-                switch(field.type) {
-                    case 'text':
-                        formHTML += `<div class="form-field">
-                            <label>${field.label}${field.required ? ' *' : ''}</label>
-                            <input type="text" name="${field.id}" ${field.required ? 'required' : ''} />
-                        </div>`;
-                        break;
-                    case 'textarea':
-                        formHTML += `<div class="form-field">
-                            <label>${field.label}${field.required ? ' *' : ''}</label>
-                            <textarea name="${field.id}" ${field.required ? 'required' : ''}></textarea>
-                        </div>`;
-                        break;
-                    case 'select':
-                        const options = field.options || [];
-                        formHTML += `<div class="form-field">
-                            <label>${field.label}${field.required ? ' *' : ''}</label>
-                            <select name="${field.id}" ${field.required ? 'required' : ''}>
-                                <option value="">Select...</option>
-                                ${options.map(opt => `<option value="${opt}">${opt}</option>`).join('')}
-                            </select>
-                        </div>`;
-                        break;
-                }
-            });
-            
-            formHTML += `
-                        <div class="form-actions">
-                            <button type="button" onclick="backToForms()" class="btn-secondary">Back to Forms</button>
-                            <button type="submit" class="btn-primary">Submit Form</button>
-                        </div>
-                    </form>
-                </div>
-            `;
-            
-            return formHTML;
-        }
-        
-        // Handle dynamic form submission
-        async function submitDynamicForm(event, formName) {
-            event.preventDefault();
-            
-            const form = event.target;
-            const formData = new FormData(form);
-            const data = {};
-            
-            for (let [key, value] of formData.entries()) {
-                data[key] = value;
-            }
-            
-            const submissionData = {
-                form_type: 'user_submission',
-                form_name: formName,
-                form_data: JSON.stringify(data),
-                submitted_at: new Date().toISOString(),
-                user_email: data.email || 'anonymous@user.com'
-            };
-            
-            // Save to gemba_requests table (as specified)
-            if (isConnectedToDatabase && supabaseClient) {
-                try {
-                    const { error } = await supabaseClient
-                        .from('gemba_requests')
-                        .insert([submissionData]);
-                    
-                    if (error) {
-                        console.error('Database save error:', error);
-                        showMessage('Form submitted but failed to save to database', 'warning');
-                    } else {
-                        console.log('Form submitted successfully to gemba_requests');
-                        showMessage('Form submitted successfully!', 'success');
-                        form.reset();
-                        setTimeout(() => backToForms(), 2000);
-                    }
-                } catch (dbError) {
-                    console.error('Database error:', dbError);
-                    showMessage('Form submitted but database error occurred', 'warning');
-                }
-            } else {
-                showMessage('Form submitted (local only - no database connection)', 'warning');
-            }
-        }
-        
-        // Back to forms list
-        function backToForms() {
-            document.getElementById('formSelection').style.display = 'block';
-            const dynamicContainer = document.getElementById('dynamicFormContainer');
-            if (dynamicContainer) {
-                dynamicContainer.style.display = 'none';
-            }
-        }
         async function showDataModal(type) {
             try {
                 console.log('Opening modal for type:', type);
@@ -1363,39 +1155,50 @@
                 // Fetch database data if connected
                 if (isConnectedToDatabase && supabaseClient) {
                     try {
-                        console.log('Fetching database submissions directly from gemba_requests...');
+                        console.log('Fetching database submissions...');
                         
-                        // SIMPLIFIED: Just query gemba_requests table directly
-                        let directQuery = supabaseClient.from('gemba_requests')
-                            .select('*')
-                            .limit(10000);
+                        // Try form_submissions first, then gemba_requests as fallback
+                        let formSubmissionsData = [];
+                        let gembaRequestsData = [];
                         
+                        // Query form_submissions table
+                        let formQuery = supabaseClient.from('form_submissions').select('*');
                         if (type === 'month') {
                             const now = new Date();
                             const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
                             const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59).toISOString();
-                            // Skip date filtering for now to get all data
-                            // directQuery = directQuery.gte('submitted_at', startOfMonth).lte('submitted_at', endOfMonth);
+                            formQuery = formQuery.gte('submitted_at', startOfMonth).lte('submitted_at', endOfMonth);
                         }
                         
-                        const { data: directData, error: directError } = await directQuery;
+                        const { data: formData, error: formError } = await formQuery;
+                        if (!formError && formData) {
+                            formSubmissionsData = formData;
+                        }
                         
-                        console.log('🔍 SIMPLIFIED QUERY RESULTS:');
-                        console.log('  - Error:', directError);
-                        console.log('  - Data length:', directData ? directData.length : 0);
-                        console.log('  - First record:', directData && directData[0] ? directData[0] : 'none');
+                        // Query gemba_requests table
+                        let gembaQuery = supabaseClient.from('gemba_requests').select('*');
+                        if (type === 'month') {
+                            const now = new Date();
+                            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+                            const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59).toISOString();
+                            
+                            console.log('Filtering for month:', startOfMonth, 'to', endOfMonth);
+                            
+                            // Try different date field names that might exist in imported data
+                            // Don't apply date filter for now - let's get all data and filter in JavaScript
+                            // gembaQuery = gembaQuery.gte('submitted_at', startOfMonth).lte('submitted_at', endOfMonth);
+                        }
                         
-                        if (!directError && directData) {
-                            dbSubmissions = directData;
-                        } else {
-                            console.error('❌ Direct query failed:', directError);
-                            dbSubmissions = [];
-                        }                        
-                        console.log(`✅ FIXED: Fetched ${dbSubmissions.length} records from gemba_requests`);
-                        console.log('DEBUG: Modal data breakdown:');
-                        console.log('  - Direct query from gemba_requests:', dbSubmissions.length);
-                        console.log('  - Records actually fetched:', dbSubmissions.length);
-                        console.log('  - Total combined:', dbSubmissions.length);                        if (dbSubmissions.length > 0) {
+                        const { data: gembaData, error: gembaError } = await gembaQuery;
+                        if (!gembaError && gembaData) {
+                            gembaRequestsData = gembaData;
+                        }
+                        
+                        // Combine all database submissions
+                        dbSubmissions = [...formSubmissionsData, ...gembaRequestsData];
+                        
+                        console.log(`Fetched database submissions: ${formSubmissionsData.length} from form_submissions, ${gembaRequestsData.length} from gemba_requests`);
+                        if (dbSubmissions.length > 0) {
                             console.log('Sample database record:', dbSubmissions[0]);
                         }
                         
@@ -1407,42 +1210,15 @@
             switch(type) {
                 case 'forms':
                     title = 'Available Forms';
-                    // Try to load forms from database
-                    if (isConnectedToDatabase && supabaseClient) {
-                        try {
-                            const { data: templates, error } = await supabaseClient
-                                .from('form_submissions')
-                                .select('*')
-                                .eq('is_template', true);
-                            
-                            if (!error && templates && templates.length > 0) {
-                                data = templates.map(template => ({
-                                    name: template.form_name || 'Untitled Form',
-                                    description: template.form_description || 'Dynamic form created by admin',
-                                    status: 'Active',
-                                    created: template.created_at ? new Date(template.created_at).toLocaleDateString() : 'Unknown',
-                                    fields: JSON.parse(template.form_fields || '[]').length + ' fields'
-                                }));
-                            } else {
-                                data = [{ name: 'No templates found', description: 'Admin has not created any templates yet', status: 'N/A', created: 'N/A' }];
-                            }
-                        } catch (error) {
-                            console.error('Error loading templates for modal:', error);
-                            data = [{ name: 'Error loading templates', description: 'Database connection error', status: 'Error', created: 'N/A' }];
-                        }
-                    } else {
-                        data = [
-                            { name: 'Contact Form', description: 'Basic contact information form', status: 'Active', created: '2025-10-01' },
-                            { name: 'Gemba Request Form', description: 'Submit requests for Gemba walks and observations', status: 'Active', created: '2025-10-01' },
-                            { name: 'Feedback Form', description: 'Collect feedback and suggestions', status: 'Active', created: '2025-10-01' },
-                            { name: 'Event Registration', description: 'Register for company events and meetings', status: 'Active', created: '2025-10-01' }
-                        ];
-                    }
-                    break;                case 'total':
-                    console.log('🔍 MODAL TABLE DATA PREP:');
-                    console.log('  - localSubmissions.length:', localSubmissions.length);
-                    console.log('  - dbSubmissions.length:', dbSubmissions.length);
-                    console.log('  - dbSubmissions first 2 records:', dbSubmissions.slice(0, 2));                    title = `All Submissions (Local: ${localSubmissions.length}, Database: ${dbSubmissions.length})`;
+                    data = [
+                        { name: 'Contact Form', description: 'Basic contact information form', status: 'Active', created: '2025-10-01' },
+                        { name: 'Gemba Request Form', description: 'Submit requests for Gemba walks and observations', status: 'Active', created: '2025-10-01' },
+                        { name: 'Feedback Form', description: 'Collect feedback and suggestions', status: 'Active', created: '2025-10-01' },
+                        { name: 'Event Registration', description: 'Register for company events and meetings', status: 'Active', created: '2025-10-01' }
+                    ];
+                    break;
+                case 'total':
+                    title = `All Submissions (Local: ${localSubmissions.length}, Database: ${dbSubmissions.length})`;
                     
                     // Combine local and database data
                     const allSubmissions = [...localSubmissions, ...dbSubmissions.map(dbSub => {
@@ -1920,5 +1696,4 @@
         }
     </style>
 </body>
-<!-- Rebuild: $(date +%s) -->
 </html>
